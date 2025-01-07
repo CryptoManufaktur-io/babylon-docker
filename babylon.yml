@@ -1,0 +1,248 @@
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: 100m
+      max-file: "3"
+      tag: '{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}'
+
+services:
+  babylon:
+    build:
+      context: ./babylon
+      dockerfile: Dockerfile.source
+      args:
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - USER=babylon
+    image: babylon:local
+    pull_policy: never
+    user: babylon
+    restart: unless-stopped
+    stop_grace_period: 5m
+    environment:
+      - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+      - EXTRA_FLAGS=${EXTRA_FLAGS:-}
+      - NETWORK=${NETWORK}
+      - MONIKER=${MONIKER}
+      - CL_GRPC_PORT=${CL_GRPC_PORT:-9090}
+      - CL_P2P_PORT=${CL_P2P_PORT:-26656}
+      - CL_RPC_PORT=${CL_RPC_PORT:-26657}
+      - RPC_PORT=${RPC_PORT:-8545}
+      - WS_PORT=${WS_PORT:-8546}
+      - SNAPSHOT=${SNAPSHOT}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - MIN_GAS_PRICE=${MIN_GAS_PRICE:-0.08}
+    ports:
+      - ${CL_P2P_PORT:-26656}:${CL_P2P_PORT:-26656}/tcp
+      - ${CL_RPC_PORT:-26657}:${CL_RPC_PORT:-26657}/tcp
+    <<: *logging
+    volumes:
+      - consensus-data:/cosmos
+    entrypoint:
+      - docker-entrypoint.sh
+      - babylond
+      - start
+      - --home
+      - /cosmos
+      - --chain-id
+      - $NETWORK
+      - --log_format
+      - json
+    labels:
+        - traefik.enable=true
+        - traefik.http.routers.${RPC_HOST}.service=${RPC_HOST}
+        - traefik.http.routers.${RPC_HOST}.entrypoints=websecure
+        - traefik.http.routers.${RPC_HOST}.rule=Host(`${RPC_HOST}.${DOMAIN}`)
+        - traefik.http.routers.${RPC_HOST}.tls.certresolver=letsencrypt
+        - traefik.http.routers.${RPC_HOST}lb.service=${RPC_HOST}
+        - traefik.http.routers.${RPC_HOST}lb.entrypoints=websecure
+        - traefik.http.routers.${RPC_HOST}lb.rule=Host(`${RPC_LB}.${DOMAIN}`)
+        - traefik.http.routers.${RPC_HOST}lb.tls.certresolver=letsencrypt
+        - traefik.http.services.${RPC_HOST}.loadbalancer.server.port=${RPC_PORT}
+        - traefik.http.routers.${WS_HOST:-babylonws}.service=${WS_HOST:-babylonws}
+        - traefik.http.routers.${WS_HOST:-babylonws}.entrypoints=websecure
+        - traefik.http.routers.${WS_HOST:-babylonws}.rule=Host(`${WS_HOST:-babylonws}.${DOMAIN}`)
+        - traefik.http.routers.${WS_HOST:-babylonws}.tls.certresolver=letsencrypt
+        - traefik.http.routers.${WS_HOST:-babylonws}lb.service=${WS_HOST:-babylonws}
+        - traefik.http.routers.${WS_HOST:-babylonws}lb.entrypoints=websecure
+        - traefik.http.routers.${WS_HOST:-babylonws}lb.rule=Host(`${WS_LB:-babylonws-lb}.${DOMAIN}`)
+        - traefik.http.routers.${WS_HOST:-babylonws}lb.tls.certresolver=letsencrypt
+        - traefik.http.services.${WS_HOST:-babylonws}.loadbalancer.server.port=${WS_PORT:-8546}
+        - metrics.scrape=true
+        - metrics.path=/metrics
+        - metrics.port=26660
+        - metrics.instance=babylon
+        - metrics.network=${NETWORK}
+
+  cli:
+    profiles: ["tools"]
+    build:
+      context: ./babylon
+      dockerfile: Dockerfile.source
+      args:
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - USER=babylon
+    image: babylon:local
+    pull_policy: never
+    user: babylon
+    volumes:
+      - ./keys/operator:/cosmos/keyring-test:rw
+      - ./keys/consensus/priv_validator_key.json:/cosmos/config/priv_validator_key.json:rw
+      - ./keys/consensus/priv_validator_state.json:/cosmos/data/priv_validator_state.json:rw
+
+  create-validator-keys:
+    profiles: ["tools"]
+    build:
+      context: ./babylon
+      dockerfile: Dockerfile.binary
+      args:
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - USER=babylon
+    image: babylon:local
+    pull_policy: never
+    user: root
+    volumes:
+      - ./keys/consensus:/data/config:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        babylond init $MONIKER --chain-id $NETWORK --home /cosmos > /dev/null 2>&1
+        cp /cosmos/config/priv_validator_key.json /data/config/
+        cp /cosmos/data/priv_validator_state.json /data/config/
+        chown -R babylon:babylon /data/config/*
+        echo "Validator keys created!"
+
+  import-validator-keys:
+    profiles: ["tools"]
+    build:
+      context: ./babylon
+      dockerfile: Dockerfile.binary
+      args:
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - USER=babylon
+    image: babylon:local
+    pull_policy: never
+    user: root
+    volumes:
+      - consensus-data:/cosmos
+      - ./keys/consensus:/data/config:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        echo "Importing validator key and state file from ./keys/consensus into container"
+        cp /data/config/priv_validator_key.json /cosmos/config/
+        cp /data/config/priv_validator_state.json /cosmos/data/
+        chown -R babylon:babylon /cosmos/config/priv_validator_key.json
+        chown -R babylon:babylon /cosmos/data/priv_validator_state.json
+        echo "Validator keys imported!"
+
+  export-validator-keys:
+    profiles: ["tools"]
+    build:
+      context: ./babylon
+      dockerfile: Dockerfile.binary
+      args:
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - USER=babylon
+    image: babylon:local
+    pull_policy: never
+    user: root
+    volumes:
+      - consensus-data:/cosmos
+      - ./keys/consensus:/data/config:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        echo "Exporting validator key and state file from container to ./keys/consensus"
+        cp /cosmos/config/priv_validator_key.json /data/config/
+        cp /cosmos/data/priv_validator_state.json /data/config/
+        echo "Validator keys exported!"
+
+  create-operator-wallet:
+    profiles: ["tools"]
+    build:
+      context: ./babylon
+      dockerfile: Dockerfile.binary
+      args:
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - USER=babylon
+    image: babylon:local
+    pull_policy: never
+    user: root
+    volumes:
+      - ./keys/operator:/cosmos/keyring-test:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        babylond init $MONIKER --chain-id $NETWORK --home /cosmos > /dev/null 2>&1
+        babylond keys add $MONIKER --keyring-backend test --home /cosmos 2>&1 | tee /tmp/temp_backup
+        [ $${PIPESTATUS[0]} -eq 0 ] && sed -n '/- address/,$$p' /tmp/temp_backup > "/cosmos/keyring-test/${MONIKER}.backup" || rm /tmp/temp_backup
+        chown -R babylon:babylon /cosmos/keyring-test/*
+  
+  create-bls-key:
+    profiles: ["tools"]
+    build:
+      context: ./babylon
+      dockerfile: Dockerfile.binary
+      args:
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - USER=babylon
+    image: babylon:local
+    pull_policy: never
+    user: root
+    volumes:
+      - ./keys/consensus:/data/config:rw
+      - ./keys/operator:/cosmos/keyring-test:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        cp /data/config/priv_validator_key.json /cosmos/config/
+        cp /data/config/priv_validator_state.json /cosmos/data/
+        bbn_address=$(babylond keys show $MONIKER --keyring-backend test --address --home /cosmos)
+        babylond create-bls-key $$bbn_address --home /cosmos
+        cp -f /cosmos/config/priv_validator_key.json /data/config/
+        chown -R babylon:babylon /data/config/*
+        echo "BLS Key created!"
+
+  register-validator:
+    profiles: ["tools"]
+    build:
+      context: ./babylon
+      dockerfile: Dockerfile.binary
+      args:
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - USER=babylon
+    image: babylon:local
+    pull_policy: never
+    user: babylon
+    volumes:
+      - ./keys/consensus/priv_validator_key.json:/cosmos/config/priv_validator_key.json:ro
+      - ./keys/operator:/cosmos/keyring-test:ro
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        echo "Validator pubkey:"
+        babylond --home /cosmos tendermint show-validator
+        cat > /cosmos/stake-validator.json << EOF
+        {
+            "pubkey": $(babylond --home /cosmos tendermint show-validator),
+            "amount": "1000000ubbn",
+            "moniker": "$(echo $MONIKER)",
+            "commission-rate": "0.1",
+            "commission-max-rate": "0.2",
+            "commission-max-change-rate": "0.01",
+            "min-self-delegation": "1"
+        }
+        EOF
+        cat /cosmos/stake-validator.json
+        babylond --home /cosmos tx checkpointing create-validator ./cosmos/stake-validator.json \
+        --chain-id=$NETWORK \
+        --gas "auto" \
+        --gas-adjustment 1.5 \
+        --gas-prices "0.005ubbn" \
+        --from=$MONIKER \
+        --keyring-backend=test \
+        --node http://babylon:$CL_RPC_PORT/
+
+volumes:
+  consensus-data:

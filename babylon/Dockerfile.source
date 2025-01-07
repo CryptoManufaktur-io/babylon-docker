@@ -1,0 +1,48 @@
+# Get dasel
+FROM ghcr.io/tomwright/dasel:2-alpine AS dasel
+
+# Build babylond
+FROM golang:1.23-bookworm
+
+ARG USER=cosmos
+ARG UID=10001
+ARG DAEMON_VERSION=v0.9.0
+
+RUN apt-get update && apt-get install -y ca-certificates bash tzdata hwloc libhwloc-dev wget curl unzip lz4 zstd jq aria2
+
+WORKDIR /build
+
+RUN git clone https://github.com/babylonlabs-io/babylon.git && cd babylon && git checkout ${DAEMON_VERSION} && make install
+
+RUN babylond version
+
+# Define mounted volume
+VOLUME /cosmos
+
+# See https://stackoverflow.com/a/55757473/12429735RUN
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --shell "/sbin/nologin" \
+    --uid "${UID}" \
+    "${USER}"
+
+RUN usermod -rG users ${USER}
+
+RUN mkdir -p /cosmos/config
+RUN mkdir /cosmos/data
+
+COPY --from=dasel --chown=${USER}:${USER} /usr/local/bin/dasel /usr/local/bin/
+
+# Set correct permissions.
+RUN chown -R ${USER}:${USER} /cosmos && chmod -R 700 /cosmos
+
+# Cannot assume buildkit, hence no chmod
+COPY ./docker-entrypoint.sh /usr/local/bin/
+
+# Belt and suspenders
+RUN chmod -R 755 /usr/local/bin/*
+
+USER ${USER}
+
+ENTRYPOINT ["babylond", "--home", "/cosmos"]
