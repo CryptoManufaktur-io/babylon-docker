@@ -7,7 +7,7 @@ and Prometheus remote write; use `:ext-network.yml` in `COMPOSE_FILE` inside `.e
 
 ## Quick setup
 
-Run `cp default.env .env`, then `nano .env`, and update values like MONIKER, NETWORK, and either SNAPSHOT or RAPID_SYNC_URL if you prefer to sync using one of these methods.
+Run `cp default.env .env`, then `nano .env`, and update values like MONIKER, NETWORK, and SNAPSHOT.
 
 If you want the consensus node RPC ports exposed locally, use `rpc-shared.yml` in `COMPOSE_FILE` inside `.env`.
 
@@ -26,7 +26,7 @@ To update the software, run `./babylond update` and then `./babylond up`
 
 Run `docker compose run --rm create-validator-keys`
 
-It is meant to be executed only once, it has no sanity checks and creates the `priv_validator_key.json`, `priv_validator_state.json` and `voter_state.json` files inside the `keys/consensus/` folder.
+It is meant to be executed only once, it has no sanity checks and creates the `priv_validator_key.json` and `priv_validator_state.json` files inside the `keys/consensus/` folder.
 
 Remember to backup those files if you're running a validator.
 
