@@ -94,7 +94,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.binary
+      dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
@@ -116,7 +116,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.binary
+      dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
@@ -140,7 +140,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.binary
+      dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
@@ -162,7 +162,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.binary
+      dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
@@ -183,7 +183,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.binary
+      dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
@@ -208,7 +208,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.binary
+      dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
