@@ -217,6 +217,7 @@ services:
     user: babylon
     volumes:
       - ./keys/consensus/priv_validator_key.json:/cosmos/config/priv_validator_key.json:ro
+      - ./keys/consensus/priv_validator_state.json:/cosmos/data/priv_validator_state.json:rw
       - ./keys/operator:/cosmos/keyring-test:ro
     entrypoint: ["/bin/bash","-c"]
     command:

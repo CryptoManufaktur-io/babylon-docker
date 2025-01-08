@@ -51,8 +51,7 @@ This assumes an operator wallet `keys/operator/$MONIKER.info` is present, and th
 An image with the `babylond` binary is also avilable, e.g:
 
 - `docker compose run --rm cli tendermint show-validator`
-- `docker compose run --rm cli tx gov vote 12 yes --from YOUR-MONIKER --chain-id bbn-test-5 --gas-adjustment 1.4 --fees 2000000ubbn --keyring-backend=test --node http://babylon:26658/`
-
+- `docker compose run --rm cli query bank balances bbn1q5u89k4w0tj7nxvmp6dhz3yaflw2cx9epv3g5x --node http://babylon:26657/`
 ## Version
 
 Babylon Node Docker uses a semver scheme.
