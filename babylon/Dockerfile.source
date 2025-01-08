@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y ca-certificates bash tzdata hwloc libhw
 
 WORKDIR /build
 
+ENV BABYLON_BUILD_OPTIONS="testnet"
+
 RUN git clone https://github.com/babylonlabs-io/babylon.git && cd babylon && git checkout ${DAEMON_VERSION} && make install
 
 RUN babylond version
