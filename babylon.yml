@@ -236,7 +236,7 @@ services:
         }
         EOF
         cat /cosmos/stake-validator.json
-        babylond --home /cosmos tx checkpointing create-validator ./cosmos/stake-validator.json \
+        babylond --home /cosmos tx checkpointing create-validator /cosmos/stake-validator.json \
         --chain-id=$NETWORK \
         --gas "auto" \
         --gas-adjustment 1.5 \
