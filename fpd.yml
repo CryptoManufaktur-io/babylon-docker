@@ -34,7 +34,6 @@ services:
       - ${EOTS_PUBLIC_KEY}
 
   fpd-init:
-    profiles: ["tools"]
     build:
       context: ./fpd
       dockerfile: Dockerfile.binary
@@ -57,26 +56,7 @@ services:
           echo "Already initialized!"
         fi
 
-  fpd-import-keys:
-    profiles: ["tools"]
-    build:
-      context: ./fpd
-      dockerfile: Dockerfile.binary
-      args:
-        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
-        - USER=finality-provider
-    image: fpd:local
-    pull_policy: never
-    user: finality-provider
-    volumes:
-      - fpd-data:/home/finality-provider/:rw
-    entrypoint: ["/bin/bash","-c"]
-    command:
-      - |
-        fpd keys add finality-provider --recover
-
   fpd-update-configs:
-    profiles: ["tools"]
     build:
       context: ./fpd
       dockerfile: Dockerfile.binary
@@ -99,6 +79,24 @@ services:
           echo "Error: /config/fpd.conf not found."
           exit 1
         fi
+
+  fpd-import-keys:
+    profiles: ["tools"]
+    build:
+      context: ./fpd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+        - USER=finality-provider
+    image: fpd:local
+    pull_policy: never
+    user: finality-provider
+    volumes:
+      - fpd-data:/home/finality-provider/:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        fpd keys add finality-provider --recover
 
   fpd-cli:
     profiles: ["tools"]

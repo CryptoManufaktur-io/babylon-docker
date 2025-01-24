@@ -31,7 +31,6 @@ services:
       - start
 
   eotsd-init:
-    profiles: ["tools"]
     build:
       context: ./eotsd
       dockerfile: Dockerfile.binary
@@ -54,26 +53,7 @@ services:
           echo "Already initialized!"
         fi
 
-  eotsd-import-keys:
-    profiles: ["tools"]
-    build:
-      context: ./eotsd
-      dockerfile: Dockerfile.binary
-      args:
-        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
-        - USER=finality-provider
-    image: eotsd:local
-    pull_policy: never
-    user: finality-provider
-    volumes:
-      - eotsd-data:/home/finality-provider/:rw
-    entrypoint: ["/bin/bash","-c"]
-    command:
-      - |
-        eotsd keys add $MONIKER --recover --keyring-backend test
-
   eotsd-update-configs:
-    profiles: ["tools"]
     build:
       context: ./eotsd
       dockerfile: Dockerfile.binary
@@ -96,6 +76,24 @@ services:
           echo "Error: /config/eotsd.conf not found."
           exit 1
         fi
+
+  eotsd-import-keys:
+    profiles: ["tools"]
+    build:
+      context: ./eotsd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+        - USER=finality-provider
+    image: eotsd:local
+    pull_policy: never
+    user: finality-provider
+    volumes:
+      - eotsd-data:/home/finality-provider/:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        eotsd keys add $MONIKER --recover --keyring-backend test
 
   eotsd-cli:
     profiles: ["tools"]
