@@ -20,7 +20,7 @@ services:
       - LOG_LEVEL=debug
       - MONIKER=${MONIKER}
       - EXTRA_FLAGS=${fpd_EXTRA_FLAGS}
-      - EOTS_PUBLIC_KEY=${EOTS_PUBLIC_KEY}
+      - EOTSD_PUBLIC_KEY=${EOTSD_PUBLIC_KEY}
     ports:
       - 12581:12581
       - 2112:2112
@@ -31,7 +31,7 @@ services:
     command:
       - start
       - --eots-pk
-      - ${EOTS_PUBLIC_KEY}
+      - ${EOTSD_PUBLIC_KEY}
 
   fpd-init:
     build:
@@ -54,30 +54,6 @@ services:
           fpd init
         else
           echo "Already initialized!"
-        fi
-
-  fpd-update-configs:
-    build:
-      context: ./fpd
-      dockerfile: Dockerfile.binary
-      args:
-        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
-        - USER=finality-provider
-    image: fpd:local
-    pull_policy: never
-    user: finality-provider
-    volumes:
-      - fpd-data:/home/finality-provider/:rw
-    entrypoint: ["/bin/bash", "-c"]
-    command:
-      - |
-        if [[ -f /config/fpd.conf ]]; then
-          echo "Updating configuration file..."
-          cp /config/fpd.conf /home/finality-provider/.fpd/fpd.conf
-          echo "Configuration file updated."
-        else
-          echo "Error: /config/fpd.conf not found."
-          exit 1
         fi
 
   fpd-import-keys:

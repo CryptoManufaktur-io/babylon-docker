@@ -20,6 +20,7 @@ services:
       - LOG_LEVEL=debug
       - MONIKER=${MONIKER}
       - EXTRA_FLAGS=${EOTSD_EXTRA_FLAGS}
+      - EOTSD_LISTENER=${EOTSD_LISTENER} 
     ports:
       - 12582:12582
       - 2113:2113
@@ -27,6 +28,10 @@ services:
       - eotsd-data:/home/finality-provider/:rw
     entrypoint:
       - docker-entrypoint.sh
+      - eotsd
+      - start
+      - --rpc-listener
+      - ${EOTSD_LISTENER} 
     command:
       - start
 
@@ -51,30 +56,6 @@ services:
           eotsd init $MONIKER /dev/null 2>&1
         else
           echo "Already initialized!"
-        fi
-
-  eotsd-update-configs:
-    build:
-      context: ./eotsd
-      dockerfile: Dockerfile.binary
-      args:
-        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
-        - USER=finality-provider
-    image: eotsd:local
-    pull_policy: never
-    user: finality-provider
-    volumes:
-      - eotsd-data:/home/finality-provider/:rw
-    entrypoint: ["/bin/bash", "-c"]
-    command:
-      - |
-        if [[ -f /config/eotsd.conf ]]; then
-          echo "Updating configuration file..."
-          cp /config/eotsd.conf /home/finality-provider/.eotsd/eotsd.conf
-          echo "Configuration file updated."
-        else
-          echo "Error: /config/eotsd.conf not found."
-          exit 1
         fi
 
   eotsd-import-keys:

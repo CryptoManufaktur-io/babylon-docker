@@ -30,8 +30,8 @@ shift # Remove the command from the arguments
 # Command handling logic
 case "$COMMAND" in
   start)
-    echo "Keys found. Starting fpd with extra flags: ${EXTRA_FLAGS:-} $*"
-    exec fpd start ${EXTRA_FLAGS:-} "$@"
+    echo "Keys found. Starting fpd with --rpc-listener: ${FPD_LISTENER}"
+    exec fpd start --rpc-listener "${FPD_LISTENER}" ${EXTRA_FLAGS:-} "$@"
     ;;
   *)
     echo "Error: Unknown command '$COMMAND'. Supported commands: start"

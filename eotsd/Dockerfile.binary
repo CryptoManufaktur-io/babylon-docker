@@ -3,8 +3,8 @@ ARG FINALITY_PROVIDER_VERSION=v0.14.3
 ARG USER=finality-provider
 ARG UID=10002
 
-# Base image for source
-FROM babylonlabs/finality-provider:${FINALITY_PROVIDER_VERSION} AS source
+# Base image for finality
+FROM babylonlabs/finality-provider:${FINALITY_PROVIDER_VERSION} AS finality
 
 # Minimal base image
 FROM debian:bookworm-slim
@@ -49,12 +49,11 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /home/${USER}
 
 # Copy configuration and binaries
-COPY ./eotsd.conf /config/eotsd.conf
-COPY --from=source /bin/eotsd /usr/local/bin/eotsd
+COPY --from=finality /bin/eotsd /usr/local/bin/eotsd
 COPY ./docker-entrypoint.sh /usr/local/bin/
 
 # Set correct permissions
-RUN chown -R ${USER}:${USER} /home/${USER} /config && \
+RUN chown -R ${USER}:${USER} /home/${USER} && \
     chmod -R 700 /home/${USER} && \
     chmod +x /usr/local/bin/docker-entrypoint.sh
 

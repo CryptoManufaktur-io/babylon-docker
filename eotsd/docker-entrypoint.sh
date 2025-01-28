@@ -23,17 +23,19 @@ if [[ $# -eq 0 ]]; then
   set -- start
 fi
 
-COMMAND=$1
-shift # Remove the command from the arguments
+exec "$@" ${EXTRA_FLAGS}
 
-# Command handling logic
-case "$COMMAND" in
-  start)
-    echo "Keys found. Starting eotsd with extra flags: ${EXTRA_FLAGS:-} $*"
-    exec eotsd start ${EXTRA_FLAGS:-} "$@"
-    ;;
-  *)
-    echo "Error: Unknown command '$COMMAND'. Supported commands: start"
-    exit 1
-    ;;
-esac
+# COMMAND=$1
+# shift # Remove the command from the arguments
+
+# # Command handling logic
+# case "$COMMAND" in
+#   start)
+#     echo "Keys found. Starting eotsd with --rpc-listener: ${EOTSD_LISTENER}"
+#     exec eotsd start --rpc-listener "${EOTSD_LISTENER}" ${EXTRA_FLAGS:-} "$@"
+#     ;;
+#   *)
+#     echo "Error: Unknown command '$COMMAND'. Supported commands: start"
+#     exit 1
+#     ;;
+# esac
