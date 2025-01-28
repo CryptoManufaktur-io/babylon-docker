@@ -40,6 +40,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     lz4 \
     zstd \
+    net-tools \
     jq \
     aria2 && \
     apt-get clean && \

@@ -35,29 +35,6 @@ services:
     command:
       - start
 
-  eotsd-init:
-    build:
-      context: ./eotsd
-      dockerfile: Dockerfile.binary
-      args:
-        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
-        - USER=finality-provider
-    image: eotsd:local
-    pull_policy: never
-    user: finality-provider
-    volumes:
-      - eotsd-data:/home/finality-provider/:rw
-    entrypoint: ["/bin/bash","-c"]
-    command:
-      - |
-        if [[ ! -d /home/finality-provider/.eotsd ]]; then
-          echo "Initializing!"
-          echo "Running init..."
-          eotsd init $MONIKER /dev/null 2>&1
-        else
-          echo "Already initialized!"
-        fi
-
   eotsd-import-keys:
     profiles: ["tools"]
     build:

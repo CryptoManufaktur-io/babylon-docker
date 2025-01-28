@@ -6,7 +6,7 @@ CONFIG_DIR="/home/finality-provider/.fpd"
 # Wait for .fpd directory to exist
 while [[ ! -d "$CONFIG_DIR" ]]; do
   echo "Waiting for initialization... ($CONFIG_DIR does not exist)"
-  sleep 2
+  fpd init
 done
 
 # Wait for keys to be imported
@@ -15,26 +15,10 @@ until fpd keys list 2>/dev/null | jq -e '.[] | .address' >/dev/null; do
   sleep 2
 done
 
-echo "Initialization complete."
-sleep 50000
+echo "Initialization complete. Ready to start fpd."
 
-# Default to "start" if no command is passed
-if [[ $# -eq 0 ]]; then
-  echo "No command specified. Defaulting to 'start'."
-  set -- start
-fi
+sed -i 's/EOTSManagerAddress = 127.0.0.1:12582/EOTSManagerAddress = eotsd:12582/' /home/finality-provider/.fpd/fpd.conf
+sleep 5000
+cat /home/finality-provider/.fpd/fpd.conf
 
-COMMAND=$1
-shift # Remove the command from the arguments
-
-# Command handling logic
-case "$COMMAND" in
-  start)
-    echo "Keys found. Starting fpd with --rpc-listener: ${FPD_LISTENER}"
-    exec fpd start --rpc-listener "${FPD_LISTENER}" ${EXTRA_FLAGS:-} "$@"
-    ;;
-  *)
-    echo "Error: Unknown command '$COMMAND'. Supported commands: start"
-    exit 1
-    ;;
-esac
+exec "$@" ${EXTRA_FLAGS}

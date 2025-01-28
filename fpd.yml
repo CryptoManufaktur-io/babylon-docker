@@ -28,33 +28,12 @@ services:
       - fpd-data:/home/finality-provider/:rw
     entrypoint:
       - docker-entrypoint.sh
-    command:
+      - fpd
       - start
+      - --rpc-listener
+      - ${FPD_LISTENER} 
       - --eots-pk
       - ${EOTSD_PUBLIC_KEY}
-
-  fpd-init:
-    build:
-      context: ./fpd
-      dockerfile: Dockerfile.binary
-      args:
-        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
-        - USER=finality-provider
-    image: fpd:local
-    pull_policy: never
-    user: finality-provider
-    volumes:
-      - fpd-data:/home/finality-provider/:rw
-    entrypoint: ["/bin/bash","-c"]
-    command:
-      - |
-        if [[ ! -d /home/finality-provider/.fpd ]]; then
-          echo "Initializing!"
-          echo "Running init..."
-          fpd init
-        else
-          echo "Already initialized!"
-        fi
 
   fpd-import-keys:
     profiles: ["tools"]

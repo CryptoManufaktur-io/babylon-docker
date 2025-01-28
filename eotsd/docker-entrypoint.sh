@@ -6,7 +6,7 @@ CONFIG_DIR="/home/finality-provider/.eotsd"
 # Wait for .eotsd directory to exist
 while [[ ! -d "$CONFIG_DIR" ]]; do
   echo "Waiting for initialization... ($CONFIG_DIR does not exist)"
-  sleep 2
+  eotsd init
 done
 
 # Wait for keys to be imported
@@ -25,17 +25,3 @@ fi
 
 exec "$@" ${EXTRA_FLAGS}
 
-# COMMAND=$1
-# shift # Remove the command from the arguments
-
-# # Command handling logic
-# case "$COMMAND" in
-#   start)
-#     echo "Keys found. Starting eotsd with --rpc-listener: ${EOTSD_LISTENER}"
-#     exec eotsd start --rpc-listener "${EOTSD_LISTENER}" ${EXTRA_FLAGS:-} "$@"
-#     ;;
-#   *)
-#     echo "Error: Unknown command '$COMMAND'. Supported commands: start"
-#     exit 1
-#     ;;
-# esac
