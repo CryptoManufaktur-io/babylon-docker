@@ -1,0 +1,28 @@
+FROM ghcr.io/kilnfi/cosmos-validator-watcher:latest AS build
+
+FROM alpine:latest
+
+ARG USER=cosmos-monitoring
+ARG UID=10002
+
+RUN apk update && apk add --no-cache ca-certificates tzdata bash su-exec git jq curl wget dasel
+
+# See https://stackoverflow.com/a/55757473/12429735RUN
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --shell "/sbin/nologin" \
+    --uid "${UID}" \
+    "${USER}"
+
+# Copy executables
+COPY --from=build --chown=${USER}:${USER} /cosmos-validator-watcher /usr/local/bin/cosmos-validator-watcher
+
+# Belt and suspenders
+RUN chmod -R 755 /usr/local/bin/*
+
+USER ${USER}
+
+WORKDIR /data
+
+ENTRYPOINT ["cosmos-validator-watcher"]

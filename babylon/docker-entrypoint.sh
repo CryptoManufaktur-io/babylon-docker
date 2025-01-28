@@ -45,6 +45,7 @@ dasel put -f /cosmos/config/config.toml -v "tcp://0.0.0.0:${CL_RPC_PORT}" rpc.la
 dasel put -f /cosmos/config/config.toml -v ${MONIKER} moniker
 dasel put -f /cosmos/config/config.toml -v true prometheus
 dasel put -f /cosmos/config/config.toml -v ${LOG_LEVEL} log_level
+dasel put -f /cosmos/config/config.toml -v true instrumentation.prometheus
 dasel put -f /cosmos/config/app.toml -v "0.0.0.0:${RPC_PORT}" json-rpc.address
 dasel put -f /cosmos/config/app.toml -v "0.0.0.0:${WS_PORT}" json-rpc.ws-address
 dasel put -f /cosmos/config/app.toml -v "0.0.0.0:${CL_GRPC_PORT}" grpc.address
