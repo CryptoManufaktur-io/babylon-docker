@@ -26,12 +26,13 @@ services:
       - 2112:2112
     volumes:
       - fpd-data:/home/finality-provider/:rw
+      # - /home/ubuntu/babylon-node-docker/fpd/:/home/finality-provider/.fpd/data_config/
     entrypoint:
       - docker-entrypoint.sh
       - fpd
       - start
       - --rpc-listener
-      - ${FPD_LISTENER} 
+      - ${FPD_LISTENER:-0.0.0.0:12581}
       - --eots-pk
       - ${EOTSD_PUBLIC_KEY}
 

@@ -1,0 +1,8 @@
+# To be used in conjunction with babylon.yml
+services:
+  babylon:
+    ports:
+      - 26660:26660
+  monitoring:
+    ports:
+      - ${MONITORING_PORT}:${MONITORING_PORT}/tcp

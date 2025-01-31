@@ -17,6 +17,8 @@ done
 
 echo "Initialization complete. Ready to start eotsd."
 
+# sleep infinity
+
 # Default to "start" if no command is passed
 if [[ $# -eq 0 ]]; then
   echo "No command specified. Defaulting to 'start'."

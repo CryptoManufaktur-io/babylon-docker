@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     curl \
     unzip \
+    vim \
     lz4 \
     zstd \
     net-tools \
