@@ -21,8 +21,13 @@ services:
       - MONIKER=${MONIKER}
       - EXTRA_FLAGS=${fpd_EXTRA_FLAGS}
       - EOTSD_PUBLIC_KEY=${EOTSD_PUBLIC_KEY}
+      - EOTSD_LISTENER_HOST=${EOTSD_LISTENER_HOST}
+      - EOTSD_LISTENER_PORT=${EOTSD_LISTENER_PORT}
+      - RPC_HOST=${RPC_HOST}
+      - CL_RPC_PORT=${CL_RPC_PORT}
+      - NETWORK=${NETWORK}
     ports:
-      - 12581:12581
+      - ${FPD_LISTENER_PORT}:${FPD_LISTENER_PORT}
       - 2112:2112
     volumes:
       - fpd-data:/home/finality-provider/:rw
@@ -32,7 +37,7 @@ services:
       - fpd
       - start
       - --rpc-listener
-      - ${FPD_LISTENER:-0.0.0.0:12581}
+      - ${FPD_LISTENER_HOST}:${FPD_LISTENER_PORT}
       - --eots-pk
       - ${EOTSD_PUBLIC_KEY}
 

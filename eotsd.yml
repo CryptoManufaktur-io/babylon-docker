@@ -20,10 +20,9 @@ services:
       - LOG_LEVEL=debug
       - MONIKER=${MONIKER}
       - EXTRA_FLAGS=${EOTSD_EXTRA_FLAGS}
-      - EOTSD_LISTENER=${EOTSD_LISTENER} 
     ports:
       - 2113:2113
-      - 12582:12582
+      - ${EOTSD_LISTENER_PORT}:${EOTSD_LISTENER_PORT}
     volumes:
       - eotsd-data:/home/finality-provider/:rw
     entrypoint:
@@ -31,7 +30,7 @@ services:
       - eotsd
       - start
       - --rpc-listener
-      - ${EOTSD_LISTENER} 
+      - ${EOTSD_LISTENER_HOST}:${EOTSD_LISTENER_PORT} 
     command:
       - start
 
