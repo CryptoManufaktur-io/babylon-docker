@@ -1,0 +1,76 @@
+# Declare build arguments at the top
+ARG FINALITY_PROVIDER_VERSION=v0.14.3
+ARG USER=finality-provider
+ARG UID=10002
+
+# Base image for finality
+FROM babylonlabs/finality-provider:${FINALITY_PROVIDER_VERSION} AS finality
+
+# Minimal base image
+FROM debian:bookworm-slim
+
+# Build arguments
+ARG USER
+ARG UID
+ARG FINALITY_PROVIDER_VERSION
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+
+# Add user and group
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --shell "/bin/bash" \
+    --uid "${UID}" \
+    --home "/home/${USER}" \
+    "${USER}" && \
+    usermod -rG users ${USER}
+
+# Install dependencies and clean up
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    bash \
+    tzdata \
+    hwloc \
+    libhwloc-dev \
+    wget \
+    curl \
+    unzip \
+    lz4 \
+    zstd \
+    net-tools \
+    procps \
+    jq \
+    aria2 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Disable IPv6 dual-stack by creating a sysctl configuration file
+RUN mkdir -p /etc/sysctl.d && \
+    echo "net.ipv6.bindv6only=0" > /etc/sysctl.d/99-disable-ipv6-dualstack.conf
+
+# Set the working directory for the container
+WORKDIR /home/${USER}
+
+# Copy configuration and binaries
+COPY --from=finality /bin/eotsd /usr/local/bin/eotsd
+COPY ./docker-entrypoint.sh /usr/local/bin/
+
+# Set correct permissions
+RUN chown -R ${USER}:${USER} /home/${USER} && \
+    chmod -R 700 /home/${USER} && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Switch to non-root user
+USER ${USER}
+
+# Metadata labels
+LABEL org.opencontainers.image.title="EOTSD Image" \
+      org.opencontainers.image.description="EOTSD node container with Finality Provider" \
+      org.opencontainers.image.version="${FINALITY_PROVIDER_VERSION}" \
+      org.opencontainers.image.authors="Your Name <your.email@example.com>"
+
+# Entrypoint
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

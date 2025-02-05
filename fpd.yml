@@ -1,0 +1,77 @@
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: 100m
+      max-file: "3"
+      tag: '{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}'
+
+services:  
+  fpd:
+    build:
+      context: ./fpd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+    image: fpd:local
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=debug
+      - MONIKER=${MONIKER}
+      - EXTRA_FLAGS=${fpd_EXTRA_FLAGS}
+      - EOTSD_PUBLIC_KEY=${EOTSD_PUBLIC_KEY}
+      - EOTSD_LISTENER_HOST=${EOTSD_LISTENER_HOST}
+      - EOTSD_LISTENER_PORT=${EOTSD_LISTENER_PORT}
+      - RPC_HOST=${RPC_HOST}
+      - CL_RPC_PORT=${CL_RPC_PORT}
+      - NETWORK=${NETWORK}
+    ports:
+      - ${FPD_LISTENER_PORT}:${FPD_LISTENER_PORT}
+      - 2112:2112
+    volumes:
+      - fpd-data:/home/finality-provider/:rw
+      # - /home/ubuntu/babylon-node-docker/fpd/:/home/finality-provider/.fpd/data_config/
+    entrypoint:
+      - docker-entrypoint.sh
+      - fpd
+      - start
+      - --rpc-listener
+      - ${FPD_LISTENER_HOST}:${FPD_LISTENER_PORT}
+      - --eots-pk
+      - ${EOTSD_PUBLIC_KEY}
+
+  fpd-import-keys:
+    profiles: ["tools"]
+    build:
+      context: ./fpd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+        - USER=finality-provider
+    image: fpd:local
+    pull_policy: never
+    user: finality-provider
+    volumes:
+      - fpd-data:/home/finality-provider/:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        fpd keys add finality-provider --recover
+
+  fpd-cli:
+    profiles: ["tools"]
+    build:
+      context: ./fpd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+        - USER=finality-provider
+    image: fpd:local
+    pull_policy: never
+    user: finality-provider
+    volumes:
+      - fpd-data:/home/finality-provider/:rw
+
+volumes:
+  fpd-data:

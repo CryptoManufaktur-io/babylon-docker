@@ -1,0 +1,70 @@
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: 100m
+      max-file: "3"
+      tag: '{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}'
+
+services:  
+  eotsd:
+    build:
+      context: ./eotsd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+    image: eotsd:local
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=debug
+      - MONIKER=${MONIKER}
+      - EXTRA_FLAGS=${EOTSD_EXTRA_FLAGS}
+    ports:
+      - 2113:2113
+      - ${EOTSD_LISTENER_PORT}:${EOTSD_LISTENER_PORT}
+    volumes:
+      - eotsd-data:/home/finality-provider/:rw
+    entrypoint:
+      - docker-entrypoint.sh
+      - eotsd
+      - start
+      - --rpc-listener
+      - ${EOTSD_LISTENER_HOST}:${EOTSD_LISTENER_PORT} 
+    command:
+      - start
+
+  eotsd-import-keys:
+    profiles: ["tools"]
+    build:
+      context: ./eotsd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+        - USER=finality-provider
+    image: eotsd:local
+    pull_policy: never
+    user: finality-provider
+    volumes:
+      - eotsd-data:/home/finality-provider/:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        eotsd keys add $MONIKER --recover --keyring-backend test
+
+  eotsd-cli:
+    profiles: ["tools"]
+    build:
+      context: ./eotsd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+        - USER=finality-provider
+    image: eotsd:local
+    pull_policy: never
+    user: finality-provider
+    volumes:
+      - eotsd-data:/home/finality-provider/:rw
+
+volumes:
+  eotsd-data:
