@@ -1,5 +1,5 @@
 # Declare build arguments at the top
-ARG FINALITY_PROVIDER_VERSION=v0.14.3
+ARG FINALITY_PROVIDER_VERSION
 ARG USER=finality-provider
 ARG UID=10002
 

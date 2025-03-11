@@ -22,7 +22,6 @@ services:
       - EXTRA_FLAGS=${EOTSD_EXTRA_FLAGS}
     ports:
       - 2113:2113
-      - ${EOTSD_LISTENER_PORT}:${EOTSD_LISTENER_PORT}
     volumes:
       - eotsd-data:/home/finality-provider/:rw
     entrypoint:

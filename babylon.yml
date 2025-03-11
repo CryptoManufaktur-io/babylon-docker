@@ -32,9 +32,10 @@ services:
       - SNAPSHOT=${SNAPSHOT}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - MIN_GAS_PRICE=${MIN_GAS_PRICE:-0.08}
+      - BLS_PASSWORD=${BLS_PASSWORD}
     ports:
       - ${CL_P2P_PORT:-26656}:${CL_P2P_PORT:-26656}/tcp
-      - ${CL_RPC_PORT:-26657}:${CL_RPC_PORT:-26657}/tcp
+      # - ${CL_RPC_PORT:-26657}:${CL_RPC_PORT:-26657}/tcp
     <<: *logging
     volumes:
       - consensus-data:/cosmos

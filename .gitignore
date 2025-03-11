@@ -10,3 +10,4 @@ keys-backup/consensus/.empty
 keys-backup/consensus/priv_validator_key.json
 keys-backup/consensus/priv_validator_state.json
 coredao-snapshot-mainnet-20241024-pruned.tar.lz4
+backup/finality-provider.db

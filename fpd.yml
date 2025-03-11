@@ -27,19 +27,18 @@ services:
       - CL_RPC_PORT=${CL_RPC_PORT}
       - NETWORK=${NETWORK}
     ports:
-      - ${FPD_LISTENER_PORT}:${FPD_LISTENER_PORT}
+      # - ${FPD_LISTENER_PORT}:${FPD_LISTENER_PORT}
       - 2112:2112
     volumes:
       - fpd-data:/home/finality-provider/:rw
-      # - /home/ubuntu/babylon-node-docker/fpd/:/home/finality-provider/.fpd/data_config/
     entrypoint:
       - docker-entrypoint.sh
       - fpd
       - start
       - --rpc-listener
       - ${FPD_LISTENER_HOST}:${FPD_LISTENER_PORT}
-      - --eots-pk
-      - ${EOTSD_PUBLIC_KEY}
+      # - --eots-pk
+      # - ${EOTSD_PUBLIC_KEY}
 
   fpd-import-keys:
     profiles: ["tools"]
@@ -58,6 +57,56 @@ services:
     command:
       - |
         fpd keys add finality-provider --recover
+
+  fpd-create-finality-provider:
+    profiles: ["tools"]
+    build:
+      context: ./fpd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+        - USER=finality-provider
+    image: fpd:local
+    pull_policy: never
+    user: finality-provider
+    volumes:
+      - fpd-data:/home/finality-provider/:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        fpd create-finality-provider \
+          --chain-id bbn-test-5 \
+          --daemon-address fpd:12581 \
+          --eots-pk 030bd6622049385a958057774d4a95af246d17cd69146bda2021a12a422f37d3 \
+          --commission-max-change-rate 0.01 \
+          --commission-max-rate 0.20 \
+          --commission-rate 0.05 \
+          --key-name finality-provider \
+          --moniker "GalaxyDigital" \
+          --website "https://galaxy.com" \
+          --security-contact "bci@galaxy.com" \
+          --details "Galaxy is a digital asset and blockchain leader helping institutions, startups, and qualified individuals shape a changing economy. We provide platform solutions custom-made for a digitally native ecosystem."
+
+  # fpd-restore-db:
+  #   profiles: ["restore"]
+  #   image: fpd:local
+  #   volumes:
+  #     - fpd-data:/home/finality-provider/:rw
+  #     - ./backup:/home/backup/:rw
+  #   entrypoint: ["/bin/bash", "-c"]
+  #   command:
+  #     - |
+  #       echo "Restoring finality-provider.db from host backup..."
+  #       if [[ ! -f "/home/backup/finality-provider.db" ]]; then
+  #         echo "ERROR: Backup file not found at /home/backup/finality-provider.db"
+  #         exit 1
+  #       fi
+
+  #       mkdir -p /home/finality-provider/.fpd/data
+  #       touch /home/finality-provider/.fpd/data/finality-provider.db
+  #       # chown -R finality-provider:finality-provider /home/backup/
+  #       cp /home/backup/finality-provider.db /home/finality-provider/.fpd/data/finality-provider.db
+  #       echo "Successfully restored finality-provider.db"
 
   fpd-cli:
     profiles: ["tools"]
