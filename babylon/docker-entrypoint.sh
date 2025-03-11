@@ -58,4 +58,5 @@ dasel put -f /cosmos/config/client.toml -v "tcp://localhost:${CL_RPC_PORT}" node
 
 # Word splitting is desired for the command line parameters
 # shellcheck disable=SC2086
+#sleep 500
 exec "$@" ${EXTRA_FLAGS}
