@@ -25,5 +25,7 @@ if [[ $# -eq 0 ]]; then
   set -- start
 fi
 
+sed -i '/^\[metrics\]/,/^\[/{ /^[^[]/ s/127\.0\.0\.1/0.0.0.0/g }' /home/finality-provider/.eotsd/eotsd.conf
+
 exec "$@" ${EXTRA_FLAGS}
 
