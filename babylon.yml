@@ -198,7 +198,7 @@ services:
       - |
         cp /data/config/priv_validator_key.json /cosmos/config/
         cp /data/config/priv_validator_state.json /cosmos/data/
-        bbn_address=$(babylond keys show $MONIKER --keyring-backend test --address --home /cosmos)
+        bbn_address=$$(babylond keys show $MONIKER --keyring-backend test --address --home /cosmos)
         babylond create-bls-key $$bbn_address --home /cosmos
         cp -f /cosmos/config/priv_validator_key.json /data/config/
         chown -R babylon:babylon /data/config/*
@@ -226,9 +226,9 @@ services:
         babylond --home /cosmos tendermint show-validator
         cat > /cosmos/stake-validator.json << EOF
         {
-            "pubkey": $(babylond --home /cosmos tendermint show-validator),
+            "pubkey": $$(babylond --home /cosmos tendermint show-validator),
             "amount": "1000000ubbn",
-            "moniker": "$(echo $MONIKER)",
+            "moniker": "$$(echo $MONIKER)",
             "commission-rate": "0.1",
             "commission-max-rate": "0.2",
             "commission-max-change-rate": "0.01",
@@ -237,13 +237,13 @@ services:
         EOF
         cat /cosmos/stake-validator.json
         babylond --home /cosmos tx checkpointing create-validator /cosmos/stake-validator.json \
-        --chain-id=$NETWORK \
+        --chain-id=$$NETWORK \
         --gas "auto" \
         --gas-adjustment 1.5 \
         --gas-prices "0.005ubbn" \
-        --from=$MONIKER \
+        --from=$$MONIKER \
         --keyring-backend=test \
-        --node http://babylon:$CL_RPC_PORT/
+        --node http://babylon:$$CL_RPC_PORT/
 
 volumes:
   consensus-data:
