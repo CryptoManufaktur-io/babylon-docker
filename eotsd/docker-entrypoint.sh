@@ -3,11 +3,11 @@ set -euo pipefail
 
 CONFIG_DIR="/home/finality-provider/.eotsd"
 
-# Wait for .eotsd directory to exist
-while [[ ! -d "$CONFIG_DIR" ]]; do
-  echo "Waiting for initialization... ($CONFIG_DIR does not exist)"
+# Initialize
+if [[ ! -d "$CONFIG_DIR" ]]; then
+  echo "Initializing since $CONFIG_DIR does not exist"
   eotsd init
-done
+fi
 
 # Wait for keys to be imported
 until eotsd keys list --keyring-backend test 2>/dev/null | grep -q "address:"; do

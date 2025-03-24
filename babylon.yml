@@ -32,9 +32,10 @@ services:
       - SNAPSHOT=${SNAPSHOT}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - MIN_GAS_PRICE=${MIN_GAS_PRICE:-0.08}
+      - BLS_PASSWORD=${BLS_PASSWORD}
     ports:
       - ${CL_P2P_PORT:-26656}:${CL_P2P_PORT:-26656}/tcp
-      - 26659:26659/tcp
+      - 26659:26659/tcp # todo use env variable
     <<: *logging
     volumes:
       - consensus-data:/cosmos
@@ -70,7 +71,7 @@ services:
         - traefik.http.services.${WS_HOST:-babylonws}.loadbalancer.server.port=${WS_PORT:-8546}
         - metrics.scrape=true
         - metrics.path=/metrics
-        - metrics.port=26660
+        - metrics.port=${BABYLON_METRICS_PORT:-26660}
         - metrics.instance=babylon
         - metrics.network=${NETWORK}
 

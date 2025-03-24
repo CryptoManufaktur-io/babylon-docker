@@ -6,7 +6,7 @@ x-logging: &logging
       max-file: "3"
       tag: '{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}'
 
-services:  
+services:
   fpd:
     build:
       context: ./fpd
@@ -19,7 +19,7 @@ services:
     environment:
       - LOG_LEVEL=debug
       - MONIKER=${MONIKER}
-      - EXTRA_FLAGS=${fpd_EXTRA_FLAGS}
+      - EXTRA_FLAGS=${FPD_EXTRA_FLAGS}
       - EOTSD_PUBLIC_KEY=${EOTSD_PUBLIC_KEY}
       - EOTSD_LISTENER_HOST=${EOTSD_LISTENER_HOST}
       - EOTSD_LISTENER_PORT=${EOTSD_LISTENER_PORT}
@@ -28,10 +28,8 @@ services:
       - NETWORK=${NETWORK}
     ports:
       - ${FPD_LISTENER_PORT}:${FPD_LISTENER_PORT}
-      - 2112:2112
     volumes:
       - fpd-data:/home/finality-provider/:rw
-      # - /home/ubuntu/babylon-node-docker/fpd/:/home/finality-provider/.fpd/data_config/
     entrypoint:
       - docker-entrypoint.sh
       - fpd
@@ -40,6 +38,12 @@ services:
       - ${FPD_LISTENER_HOST}:${FPD_LISTENER_PORT}
       - --eots-pk
       - ${EOTSD_PUBLIC_KEY}
+    labels:
+      - metrics.scrape=true
+      - metrics.path=/metrics
+      - metrics.port=${FPD_METRICS_PORT:-2112}
+      - metrics.instance=fpd
+      - metrics.network=${NETWORK}
 
   fpd-import-keys:
     profiles: ["tools"]

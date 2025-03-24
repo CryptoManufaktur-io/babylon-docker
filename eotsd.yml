@@ -6,7 +6,7 @@ x-logging: &logging
       max-file: "3"
       tag: '{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}'
 
-services:  
+services:
   eotsd:
     build:
       context: ./eotsd
@@ -21,7 +21,6 @@ services:
       - MONIKER=${MONIKER}
       - EXTRA_FLAGS=${EOTSD_EXTRA_FLAGS}
     ports:
-      - 2113:2113
       - ${EOTSD_LISTENER_PORT}:${EOTSD_LISTENER_PORT}
     volumes:
       - eotsd-data:/home/finality-provider/:rw
@@ -30,9 +29,15 @@ services:
       - eotsd
       - start
       - --rpc-listener
-      - ${EOTSD_LISTENER_HOST}:${EOTSD_LISTENER_PORT} 
+      - ${EOTSD_LISTENER_HOST}:${EOTSD_LISTENER_PORT}
     command:
       - start
+    labels:
+      - metrics.scrape=true
+      - metrics.path=/metrics
+      - metrics.port=${EOTSD_METRICS_PORT:-2113}
+      - metrics.instance=eotsd
+      - metrics.network=${NETWORK}
 
   eotsd-import-keys:
     profiles: ["tools"]
