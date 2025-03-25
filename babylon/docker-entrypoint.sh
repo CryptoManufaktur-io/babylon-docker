@@ -5,6 +5,8 @@ if [[ ! -f /cosmos/.initialized ]]; then
   echo "Initializing!"
 
   echo "Running init..."
+  # todo New versions require this 
+  # babylond init $MONIKER --chain-id $NETWORK --home /cosmos --overwrite --bls-password $BLS_PASSWORD
   babylond init $MONIKER --chain-id $NETWORK --home /cosmos --overwrite
 
   echo "Downloading genesis..."

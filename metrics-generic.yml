@@ -2,7 +2,8 @@
 services:
   babylon:
     ports:
-      - 26660:26660
+      - ${BABYLON_METRICS_PORT:-26660}:${BABYLON_METRICS_PORT:-26660}
+
   monitoring:
     ports:
       - ${MONITORING_PORT}:${MONITORING_PORT}/tcp
