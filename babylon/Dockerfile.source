@@ -14,7 +14,7 @@ ARG LEDGER_ENABLED="false"
 
 
 
-RUN apk add --update --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq musl-dev && rm -rf /var/cache/apk/\*
+RUN apk add --update --no-cache ca-certificates make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq musl-dev && rm -rf /var/cache/apk/\*
 
 WORKDIR /src
 
@@ -51,7 +51,7 @@ ENV VERSION_NUMBER=${DAEMON_VERSION#v}
 
 
 
-RUN apk update && apk add --no-cache tzdata bash curl wget lz4 jq tar
+RUN apk update && apk add --no-cache ca-certificates tzdata bash curl wget lz4 jq tar
 
 # See https://stackoverflow.com/a/55757473/12429735RUN
 RUN adduser \
