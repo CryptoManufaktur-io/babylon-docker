@@ -13,6 +13,7 @@ services:
       dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - DOWNLOAD_BASE_URL=${BABYLON_DOWNLOAD_BASE}
         - USER=babylon
     image: babylon:local
     pull_policy: never
@@ -21,6 +22,7 @@ services:
     stop_grace_period: 5m
     environment:
       - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+      - DOWNLOAD_BASE_URL=${BABYLON_DOWNLOAD_BASE}
       - EXTRA_FLAGS=${EXTRA_FLAGS:-}
       - NETWORK=${NETWORK}
       - MONIKER=${MONIKER}
@@ -33,9 +35,17 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - MIN_GAS_PRICE=${MIN_GAS_PRICE:-0.08}
       - BLS_PASSWORD=${BLS_PASSWORD}
+      - DAEMON_HOME=/cosmos
+      - DAEMON_NAME=babylond
+      - DAEMON_ALLOW_DOWNLOAD_BINARIES=false
+      - DAEMON_RESTART_AFTER_UPGRADE=true
+      - DAEMON_DATA_BACKUP_DIR=/cosmos
+      - CLIENT_DAEMON_NAME=babylond
+      - CLIENT_SKIP_UPGRADE=false
+      - CLIENT_START_PROCESS=false
+      - UNSAFE_SKIP_BACKUP=true
     ports:
       - ${CL_P2P_PORT:-26656}:${CL_P2P_PORT:-26656}/tcp
-      - 26659:26659/tcp # todo use env variable
     <<: *logging
     volumes:
       - consensus-data:/cosmos
@@ -71,9 +81,51 @@ services:
         - traefik.http.services.${WS_HOST:-babylonws}.loadbalancer.server.port=${WS_PORT:-8546}
         - metrics.scrape=true
         - metrics.path=/metrics
-        - metrics.port=${BABYLON_METRICS_PORT:-26660}
+        - metrics.port=26660
         - metrics.instance=babylon
         - metrics.network=${NETWORK}
+
+  cosmovisor:
+    profiles: ["tools"]
+    build:
+      context: ./babylon
+      dockerfile: Dockerfile.source
+      args:
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - DOWNLOAD_BASE_URL=${BABYLON_DOWNLOAD_BASE}
+        - USER=babylon
+    image: babylon:local
+    pull_policy: never
+    user: babylon
+    environment:
+      - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+      - DOWNLOAD_BASE_URL=${BABYLON_DOWNLOAD_BASE}
+      - EXTRA_FLAGS=${EXTRA_FLAGS:-}
+      - NETWORK=${NETWORK}
+      - MONIKER=${MONIKER}
+      - CL_GRPC_PORT=${CL_GRPC_PORT:-9090}
+      - CL_P2P_PORT=${CL_P2P_PORT:-26656}
+      - CL_RPC_PORT=${CL_RPC_PORT:-26657}
+      - RPC_PORT=${RPC_PORT:-8545}
+      - WS_PORT=${WS_PORT:-8546}
+      - SNAPSHOT=${SNAPSHOT}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - MIN_GAS_PRICE=${MIN_GAS_PRICE:-0.08}
+      - BLS_PASSWORD=${BLS_PASSWORD}
+      - DAEMON_HOME=/cosmos
+      - DAEMON_NAME=babylond
+      - DAEMON_ALLOW_DOWNLOAD_BINARIES=false
+      - DAEMON_RESTART_AFTER_UPGRADE=true
+      - DAEMON_DATA_BACKUP_DIR=/cosmos
+      - CLIENT_DAEMON_NAME=babylond
+      - CLIENT_SKIP_UPGRADE=false
+      - CLIENT_START_PROCESS=false
+      - UNSAFE_SKIP_BACKUP=true
+    volumes:
+      - consensus-data:/cosmos
+      - ./upgrades:/upgrades:rw
+    entrypoint:
+      - cosmovisor
 
   cli:
     profiles: ["tools"]
@@ -82,14 +134,22 @@ services:
       dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - DOWNLOAD_BASE_URL=${BABYLON_DOWNLOAD_BASE}
         - USER=babylon
     image: babylon:local
     pull_policy: never
     user: babylon
+    environment:
+      - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+      - NETWORK=${NETWORK}
+      - MONIKER=${MONIKER}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
     volumes:
       - ./keys/operator:/cosmos/keyring-test:rw
       - ./keys/consensus/priv_validator_key.json:/cosmos/config/priv_validator_key.json:rw
       - ./keys/consensus/priv_validator_state.json:/cosmos/data/priv_validator_state.json:rw
+    entrypoint:
+      - babylond
 
   create-validator-keys:
     profiles: ["tools"]
@@ -98,6 +158,7 @@ services:
       dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - DOWNLOAD_BASE_URL=${BABYLON_DOWNLOAD_BASE}
         - USER=babylon
     image: babylon:local
     pull_policy: never
@@ -120,6 +181,7 @@ services:
       dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - DOWNLOAD_BASE_URL=${BABYLON_DOWNLOAD_BASE}
         - USER=babylon
     image: babylon:local
     pull_policy: never
@@ -144,6 +206,7 @@ services:
       dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - DOWNLOAD_BASE_URL=${BABYLON_DOWNLOAD_BASE}
         - USER=babylon
     image: babylon:local
     pull_policy: never
@@ -166,6 +229,7 @@ services:
       dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - DOWNLOAD_BASE_URL=${BABYLON_DOWNLOAD_BASE}
         - USER=babylon
     image: babylon:local
     pull_policy: never
@@ -187,21 +251,19 @@ services:
       dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - DOWNLOAD_BASE_URL=${BABYLON_DOWNLOAD_BASE}
         - USER=babylon
     image: babylon:local
     pull_policy: never
     user: root
     volumes:
-      - ./keys/consensus:/data/config:rw
+      - consensus-data:/cosmos
       - ./keys/operator:/cosmos/keyring-test:rw
     entrypoint: ["/bin/bash","-c"]
     command:
       - |
-        cp /data/config/priv_validator_key.json /cosmos/config/
-        cp /data/config/priv_validator_state.json /cosmos/data/
         bbn_address=$(babylond keys show $MONIKER --keyring-backend test --address --home /cosmos)
         babylond create-bls-key $$bbn_address --home /cosmos
-        cp -f /cosmos/config/priv_validator_key.json /data/config/
         chown -R babylon:babylon /data/config/*
         echo "BLS Key created!"
 
@@ -212,6 +274,7 @@ services:
       dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - DOWNLOAD_BASE_URL=${BABYLON_DOWNLOAD_BASE}
         - USER=babylon
     image: babylon:local
     pull_policy: never

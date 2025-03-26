@@ -1,9 +1,0 @@
-# To be used in conjunction with babylon.yml
-services:
-  babylon:
-    ports:
-      - ${BABYLON_METRICS_PORT:-26660}:${BABYLON_METRICS_PORT:-26660}
-
-  monitoring:
-    ports:
-      - ${MONITORING_PORT}:${MONITORING_PORT}/tcp

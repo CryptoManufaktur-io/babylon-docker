@@ -1,0 +1,5 @@
+# To be used with babylon.yml
+services:
+  babylon:
+    ports:
+      - ${CL_SIGNER_PORT:-26659}:${CL_SIGNER_PORT:-26659}/tcp

@@ -1,32 +1,18 @@
 # Get dasel
 FROM ghcr.io/tomwright/dasel:2-alpine AS dasel
 
-# Build babylond
-FROM golang:1.23-bookworm AS builder
-
-ARG DAEMON_VERSION=v0.9.0
-ARG BABYLON_BUILD_OPTIONS="testnet"
-
-RUN apt-get update && apt-get install -y ca-certificates hwloc libhwloc-dev
-
-WORKDIR /build
-
-ENV BABYLON_BUILD_OPTIONS=${BABYLON_BUILD_OPTIONS}
-
-RUN git clone https://github.com/babylonlabs-io/babylon.git && cd babylon && git checkout ${DAEMON_VERSION} && make install
-
-RUN babylond version
-
-# Place libraries into a location where they can be easily found
-RUN find /go/pkg/mod -name '*.so' -exec cp -v {} /usr/local/lib/ \;
-
 FROM debian:bookworm-slim
-
-# Define mounted volume
-VOLUME /cosmos
 
 ARG USER=cosmos
 ARG UID=10001
+ARG COSMOVISOR_VERSION=v1.5.0
+ARG DAEMON_VERSION=v1.0.0-rc.6-fix
+ARG DOWNLOAD_BASE_URL
+
+ENV VERSION_NUMBER=${DAEMON_VERSION#v}
+
+RUN apt-get update && apt-get install -y ca-certificates tzdata bash curl wget lz4 jq tar liblz4-tool
+
 
 # See https://stackoverflow.com/a/55757473/12429735RUN
 RUN adduser \
@@ -38,19 +24,29 @@ RUN adduser \
 
 RUN usermod -rG users ${USER}
 
-RUN apt-get update && apt-get install -y ca-certificates bash tzdata hwloc libhwloc-dev wget curl unzip lz4 zstd jq aria2
+# Install cosmovisor
+RUN wget https://github.com/cosmos/cosmos-sdk/releases/download/cosmovisor%2F${COSMOVISOR_VERSION}/cosmovisor-${COSMOVISOR_VERSION}-linux-amd64.tar.gz
+RUN tar xf cosmovisor-${COSMOVISOR_VERSION}-linux-amd64.tar.gz
+RUN mv cosmovisor /usr/local/bin
 
-RUN mkdir -p /cosmos/config
+RUN mkdir -p /cosmos/cosmovisor/genesis/bin
+RUN mkdir /cosmos/cosmovisor/upgrades
+RUN mkdir /cosmos/config
 RUN mkdir /cosmos/data
 
+# Download babylond for CLI use.
+RUN wget "${DOWNLOAD_BASE_URL}/${DAEMON_VERSION}/babylon-${VERSION_NUMBER}-linux-amd64" -O /usr/local/bin/babylond
+RUN chmod +x /usr/local/bin/babylond
+
+# Download libwasm
+RUN wget https://github.com/CosmWasm/wasmvm/releases/download/v2.2.3/libwasmvm.x86_64.so -O /usr/local/lib/libwasmvm.x86_64.so
+RUN ldconfig
+
+# Copy binaries.
 COPY --from=dasel --chown=${USER}:${USER} /usr/local/bin/dasel /usr/local/bin/
-COPY --from=builder --chown=${USER}:${USER} /go/bin/babylond /usr/local/bin/
-COPY --from=builder --chown=${USER}:${USER} /usr/local/lib/*.so /usr/local/lib/
 
 # Set correct permissions.
 RUN chown -R ${USER}:${USER} /cosmos && chmod -R 700 /cosmos
-# Make libraries discoverable
-RUN chmod 644 /usr/local/lib/*.so && ldconfig
 
 # Cannot assume buildkit, hence no chmod
 COPY ./docker-entrypoint.sh /usr/local/bin/

@@ -1,13 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Common cosmovisor paths.
+__cosmovisor_path=/cosmos/cosmovisor
+__genesis_path=$__cosmovisor_path/genesis
+__current_path=$__cosmovisor_path/current
+__upgrades_path=$__cosmovisor_path/upgrades
+
+__version_number=${DAEMON_VERSION#v}
+__download_url="${DOWNLOAD_BASE_URL}/${DAEMON_VERSION}/babylon-${__version_number}-linux-amd64"
+
 if [[ ! -f /cosmos/.initialized ]]; then
   echo "Initializing!"
 
+  wget "${__download_url}" -O $__genesis_path/bin/$DAEMON_NAME
+  chmod +x $__genesis_path/bin/$DAEMON_NAME
+
+  mkdir -p $__upgrades_path/$DAEMON_VERSION/bin
+  cp  $__genesis_path/bin/$DAEMON_NAME $__upgrades_path/$DAEMON_VERSION/bin/$DAEMON_NAME
+
+  # Point to current.
+  ln -s -f $__genesis_path $__current_path
+
   echo "Running init..."
-  # todo New versions require this 
-  # babylond init $MONIKER --chain-id $NETWORK --home /cosmos --overwrite --bls-password $BLS_PASSWORD
-  babylond init $MONIKER --chain-id $NETWORK --home /cosmos --overwrite
+  $__genesis_path/bin/$DAEMON_NAME init $MONIKER --chain-id $NETWORK --home /cosmos --overwrite --bls-password $BLS_PASSWORD
 
   echo "Downloading genesis..."
   wget https://raw.githubusercontent.com/babylonlabs-io/networks/refs/heads/main/$NETWORK/network-artifacts/genesis.json -O /cosmos/config/genesis.json
@@ -31,6 +47,44 @@ if [[ ! -f /cosmos/.initialized ]]; then
   touch /cosmos/.initialized
 else
   echo "Already initialized!"
+fi
+
+# Handle updates and upgrades.
+__should_update=0
+
+compare_versions() {
+    current=$1
+    new=$2
+
+    # Remove leading 'v' if present
+    ver_current="${current#v}"
+    ver_new="${new#v}"
+
+    # Check if the versions match exactly
+    if [ "$ver_current" = "$ver_new" ]; then
+        __should_update=0  # Versions are the same
+    else
+        __should_update=1  # Versions are different
+    fi
+}
+
+# First, we get the current version and compare it with the desired version.
+__current_version=$($__current_path/bin/$DAEMON_NAME version 2>&1)
+
+echo "Current version: ${__current_version}. Desired version: ${DAEMON_VERSION}"
+
+compare_versions $__current_version $DAEMON_VERSION
+
+if [ "$__should_update" -eq 1 ]; then
+  echo "Downloading new version and setting it as current"
+  mkdir -p $__upgrades_path/$DAEMON_VERSION/bin
+  wget "${__download_url}" -O $__upgrades_path/$DAEMON_VERSION/bin/$DAEMON_NAME
+  chmod +x $__upgrades_path/$DAEMON_VERSION/bin/$DAEMON_NAME
+  rm -f $__current_path
+  ln -s -f $__upgrades_path/$DAEMON_VERSION $__current_path
+  echo "Done!"
+else
+  echo "No updates needed."
 fi
 
 echo "Updating config..."
@@ -58,7 +112,14 @@ dasel put -f /cosmos/config/app.toml -v "true" "iavl-disable-fastnode"
 dasel put -f /cosmos/config/app.toml -v "signet" "btc-config.network"
 dasel put -f /cosmos/config/client.toml -v "tcp://localhost:${CL_RPC_PORT}" node
 
+# Start the process in a new session, so it gets its own process group.
 # Word splitting is desired for the command line parameters
 # shellcheck disable=SC2086
-#sleep 500
-exec "$@" ${EXTRA_FLAGS}
+setsid "$@" ${EXTRA_FLAGS} &
+pid=$!
+
+# Trap SIGTERM in the script and forward it to the process group
+trap 'kill -TERM -$pid' TERM
+
+# Wait for the background process to complete
+wait $pid

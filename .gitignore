@@ -2,11 +2,4 @@
 ext-network.yml
 *.swp
 keys/
-keys-backup/operator/babylon-node-docker.info
-keys-backup/operator/babylon-node-docker.backup
-keys-backup/operator/66c881c48dd60a89535484e7b1198ae081a2f32d.address
-keys-backup/operator/.empty
-keys-backup/consensus/.empty
-keys-backup/consensus/priv_validator_key.json
-keys-backup/consensus/priv_validator_state.json
-coredao-snapshot-mainnet-20241024-pruned.tar.lz4
+root.crt

@@ -1,0 +1,6 @@
+FROM golang:1.23-bookworm AS builder
+
+ARG DAEMON_VERSION=v0.9.0
+ARG BABYLON_BUILD_OPTIONS
+
+RUN apt-get update && apt-get install -y ca-certificates hwloc libhwloc-dev

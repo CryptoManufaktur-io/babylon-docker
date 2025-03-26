@@ -21,7 +21,7 @@ services:
       - MONIKER=${MONIKER}
       - EXTRA_FLAGS=${EOTSD_EXTRA_FLAGS}
     ports:
-      - ${EOTSD_LISTENER_PORT}:${EOTSD_LISTENER_PORT}
+      - ${EOTSD_PORT}:${EOTSD_PORT}
     volumes:
       - eotsd-data:/home/finality-provider/:rw
     entrypoint:
@@ -29,13 +29,13 @@ services:
       - eotsd
       - start
       - --rpc-listener
-      - ${EOTSD_LISTENER_HOST}:${EOTSD_LISTENER_PORT}
+      - 0.0.0.0:${EOTSD_PORT}
     command:
       - start
     labels:
       - metrics.scrape=true
       - metrics.path=/metrics
-      - metrics.port=${EOTSD_METRICS_PORT:-2113}
+      - metrics.port=2113
       - metrics.instance=eotsd
       - metrics.network=${NETWORK}
 
