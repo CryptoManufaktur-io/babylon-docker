@@ -1,7 +1,44 @@
 # Get dasel
 FROM ghcr.io/tomwright/dasel:2-alpine AS dasel
 
-FROM debian:bookworm-slim
+# Build babylond for CLI use.
+FROM golang:1.23-alpine AS builder
+
+ARG DAEMON_VERSION=v0.9.0
+ARG BABYLON_BUILD_OPTIONS=""
+ARG COSMOS_BUILD_OPTIONS=""
+
+# Use muslc for static libs
+ARG BUILD_TAGS="muslc"
+ARG LEDGER_ENABLED="false"
+
+
+
+RUN apk add --update --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq musl-dev && rm -rf /var/cache/apk/\*
+
+WORKDIR /src
+
+RUN git clone https://github.com/babylonlabs-io/babylon.git && cd babylon && git checkout ${DAEMON_VERSION}
+
+WORKDIR /src/babylon
+
+RUN go mod download
+
+RUN WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm/v2 | cut -d ' ' -f 2) && \
+    wget -q https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc."$(uname -m)".a \
+    -O /lib/libwasmvm_muslc."$(uname -m)".a && \
+    # verify checksum
+    wget -q https://github.com/CosmWasm/wasmvm/releases/download/"$WASMVM_VERSION"/checksums.txt -O /tmp/checksums.txt && \
+    sha256sum /lib/libwasmvm_muslc."$(uname -m)".a | grep $(cat /tmp/checksums.txt | grep libwasmvm_muslc."$(uname -m)" | cut -d ' ' -f 1)
+
+RUN LEDGER_ENABLED=$LEDGER_ENABLED \
+    BABYLON_BUILD_OPTIONS=$BABYLON_BUILD_OPTIONS \
+    COSMOS_BUILD_OPTIONS=$COSMOS_BUILD_OPTIONS \
+    BUILD_TAGS=$BUILD_TAGS \
+    LINK_STATICALLY=true \
+    make build
+
+FROM alpine:3.14
 
 ARG USER=cosmos
 ARG UID=10001
@@ -11,8 +48,10 @@ ARG DOWNLOAD_BASE_URL
 
 ENV VERSION_NUMBER=${DAEMON_VERSION#v}
 
-RUN apt-get update && apt-get install -y ca-certificates tzdata bash curl wget lz4 jq tar liblz4-tool
 
+
+
+RUN apk update && apk add --no-cache tzdata bash curl wget lz4 jq tar
 
 # See https://stackoverflow.com/a/55757473/12429735RUN
 RUN adduser \
@@ -21,8 +60,6 @@ RUN adduser \
     --shell "/sbin/nologin" \
     --uid "${UID}" \
     "${USER}"
-
-RUN usermod -rG users ${USER}
 
 # Install cosmovisor
 RUN wget https://github.com/cosmos/cosmos-sdk/releases/download/cosmovisor%2F${COSMOVISOR_VERSION}/cosmovisor-${COSMOVISOR_VERSION}-linux-amd64.tar.gz
@@ -34,16 +71,11 @@ RUN mkdir /cosmos/cosmovisor/upgrades
 RUN mkdir /cosmos/config
 RUN mkdir /cosmos/data
 
-# Download babylond for CLI use.
-RUN wget "${DOWNLOAD_BASE_URL}/${DAEMON_VERSION}/babylon-${VERSION_NUMBER}-linux-amd64" -O /usr/local/bin/babylond
-RUN chmod +x /usr/local/bin/babylond
-
-# Download libwasm
-RUN wget https://github.com/CosmWasm/wasmvm/releases/download/v2.2.3/libwasmvm.x86_64.so -O /usr/local/lib/libwasmvm.x86_64.so
-RUN ldconfig
-
 # Copy binaries.
+COPY --from=builder --chown=${USER}:${USER} /src/babylon/build/babylond /usr/local/bin/babylond
 COPY --from=dasel --chown=${USER}:${USER} /usr/local/bin/dasel /usr/local/bin/
+
+#RUN babylond version
 
 # Set correct permissions.
 RUN chown -R ${USER}:${USER} /cosmos && chmod -R 700 /cosmos

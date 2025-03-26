@@ -8,12 +8,11 @@ __current_path=$__cosmovisor_path/current
 __upgrades_path=$__cosmovisor_path/upgrades
 
 __version_number=${DAEMON_VERSION#v}
-__download_url="${DOWNLOAD_BASE_URL}/${DAEMON_VERSION}/babylon-${__version_number}-linux-amd64"
 
 if [[ ! -f /cosmos/.initialized ]]; then
   echo "Initializing!"
 
-  wget "${__download_url}" -O $__genesis_path/bin/$DAEMON_NAME
+  cp /builds/babylond-${DAEMON_VERSION} -O $__genesis_path/bin/$DAEMON_NAME
   chmod +x $__genesis_path/bin/$DAEMON_NAME
 
   mkdir -p $__upgrades_path/$DAEMON_VERSION/bin
@@ -49,8 +48,8 @@ else
   echo "Already initialized!"
 fi
 
-# Handle updates and upgrades.
-__should_update=0
+# Handle updates.
+__different_version=0
 
 compare_versions() {
     current=$1
@@ -62,9 +61,9 @@ compare_versions() {
 
     # Check if the versions match exactly
     if [ "$ver_current" = "$ver_new" ]; then
-        __should_update=0  # Versions are the same
+        __different_version=0  # Versions are the same
     else
-        __should_update=1  # Versions are different
+        __different_version=1  # Versions are different
     fi
 }
 
@@ -75,10 +74,10 @@ echo "Current version: ${__current_version}. Desired version: ${DAEMON_VERSION}"
 
 compare_versions $__current_version $DAEMON_VERSION
 
-if [ "$__should_update" -eq 1 ]; then
-  echo "Downloading new version and setting it as current"
+if [ "$__different_version" -eq 1 ] && [ "$FORCE_UPDATE" = "true" ]; then
+  echo "Copying new version and setting it as current"
   mkdir -p $__upgrades_path/$DAEMON_VERSION/bin
-  wget "${__download_url}" -O $__upgrades_path/$DAEMON_VERSION/bin/$DAEMON_NAME
+  cp /builds/babylond-${DAEMON_VERSION} $__upgrades_path/$DAEMON_VERSION/bin/$DAEMON_NAME
   chmod +x $__upgrades_path/$DAEMON_VERSION/bin/$DAEMON_NAME
   rm -f $__current_path
   ln -s -f $__upgrades_path/$DAEMON_VERSION $__current_path
