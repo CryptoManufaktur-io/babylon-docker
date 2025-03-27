@@ -12,7 +12,7 @@ __version_number=${DAEMON_VERSION#v}
 if [[ ! -f /cosmos/.initialized ]]; then
   echo "Initializing!"
 
-  cp /builds/babylond-${DAEMON_VERSION} -O $__genesis_path/bin/$DAEMON_NAME
+  cp /builds/babylond-${DAEMON_VERSION} $__genesis_path/bin/$DAEMON_NAME
   chmod +x $__genesis_path/bin/$DAEMON_NAME
 
   mkdir -p $__upgrades_path/$DAEMON_VERSION/bin
@@ -22,7 +22,7 @@ if [[ ! -f /cosmos/.initialized ]]; then
   ln -s -f $__genesis_path $__current_path
 
   echo "Running init..."
-  $__genesis_path/bin/$DAEMON_NAME init $MONIKER --chain-id $NETWORK --home /cosmos --overwrite --bls-password $BLS_PASSWORD
+  $__genesis_path/bin/$DAEMON_NAME init $MONIKER --chain-id $NETWORK --home /cosmos --overwrite --insecure-bls-password $BABYLON_BLS_PASSWORD
 
   echo "Downloading genesis..."
   wget https://raw.githubusercontent.com/babylonlabs-io/networks/refs/heads/main/$NETWORK/network-artifacts/genesis.json -O /cosmos/config/genesis.json
@@ -39,6 +39,7 @@ if [[ ! -f /cosmos/.initialized ]]; then
   if [ -n "$SNAPSHOT" ]; then
     echo "Downloading snapshot..."
     curl -o - -L $SNAPSHOT | lz4 -c -d - | tar --exclude='data/priv_validator_state.json' -x -C /cosmos
+    rm -f /cosmos/data/upgrade-info.json
   else
     echo "No snapshot URL defined."
   fi

@@ -16,6 +16,8 @@ services:
     pull_policy: never
     environment:
       - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+      - BABYLON_BUILD_OPTIONS=${BABYLON_BUILD_OPTIONS}
+      - FORCE_REBUILD=${FORCE_REBUILD}
     volumes:
       - babylond-builds:/builds
 
@@ -25,6 +27,7 @@ services:
       dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - BABYLON_BUILD_OPTIONS=${BABYLON_BUILD_OPTIONS}
         - USER=babylon
     image: babylon:local
     pull_policy: never
@@ -44,7 +47,8 @@ services:
       - SNAPSHOT=${SNAPSHOT}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - MIN_GAS_PRICE=${MIN_GAS_PRICE:-0.08}
-      - BLS_PASSWORD=${BLS_PASSWORD}
+      - BABYLON_BLS_PASSWORD=${BLS_PASSWORD}
+      - FORCE_UPDATE=${FORCE_UPDATE}
       - DAEMON_HOME=/cosmos
       - DAEMON_NAME=babylond
       - DAEMON_ALLOW_DOWNLOAD_BINARIES=false
@@ -65,7 +69,8 @@ services:
       - babylond-builds:/builds
     entrypoint:
       - docker-entrypoint.sh
-      - babylond
+      - cosmovisor
+      - run
       - start
       - --home
       - /cosmos
@@ -123,7 +128,7 @@ services:
       - SNAPSHOT=${SNAPSHOT}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - MIN_GAS_PRICE=${MIN_GAS_PRICE:-0.08}
-      - BLS_PASSWORD=${BLS_PASSWORD}
+      - BABYLON_BLS_PASSWORD=${BLS_PASSWORD}
       - DAEMON_HOME=/cosmos
       - DAEMON_NAME=babylond
       - DAEMON_ALLOW_DOWNLOAD_BINARIES=false
@@ -135,7 +140,7 @@ services:
       - UNSAFE_SKIP_BACKUP=true
     volumes:
       - consensus-data:/cosmos
-      - ./upgrades:/upgrades:rw
+      - babylond-builds:/builds
     entrypoint:
       - cosmovisor
 

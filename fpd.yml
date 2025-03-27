@@ -28,7 +28,7 @@ services:
     ports:
       - ${FPD_PORT}:${FPD_PORT}
     volumes:
-      - fpd-data:/home/finality-provider/:rw
+      - fpd-data:/data:rw
     entrypoint:
       - docker-entrypoint.sh
       - fpd
@@ -37,6 +37,8 @@ services:
       - 0.0.0.0:${FPD_PORT}
       - --eots-pk
       - ${EOTSD_PUBLIC_KEY}
+      - --home
+      - /data/fpd
     labels:
       - metrics.scrape=true
       - metrics.path=/metrics
@@ -56,11 +58,11 @@ services:
     pull_policy: never
     user: finality-provider
     volumes:
-      - fpd-data:/home/finality-provider/:rw
+      - fpd-data:/data:rw
     entrypoint: ["/bin/bash","-c"]
     command:
       - |
-        fpd keys add finality-provider --recover
+        fpd keys add finality-provider --recover --home /data/fpd
 
   fpd-cli:
     profiles: ["tools"]
@@ -74,7 +76,7 @@ services:
     pull_policy: never
     user: finality-provider
     volumes:
-      - fpd-data:/home/finality-provider/:rw
+      - fpd-data:/data:rw
 
 volumes:
   fpd-data:

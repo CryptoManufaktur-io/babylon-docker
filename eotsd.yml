@@ -23,13 +23,15 @@ services:
     ports:
       - ${EOTSD_PORT}:${EOTSD_PORT}
     volumes:
-      - eotsd-data:/home/finality-provider/:rw
+      - eotsd-data:/data:rw
     entrypoint:
       - docker-entrypoint.sh
       - eotsd
       - start
       - --rpc-listener
       - 0.0.0.0:${EOTSD_PORT}
+      - --home
+      - /data/eotsd
     command:
       - start
     labels:
@@ -51,7 +53,7 @@ services:
     pull_policy: never
     user: finality-provider
     volumes:
-      - eotsd-data:/home/finality-provider/:rw
+      - eotsd-data:/data:rw
     entrypoint: ["/bin/bash","-c"]
     command:
       - |
@@ -69,7 +71,7 @@ services:
     pull_policy: never
     user: finality-provider
     volumes:
-      - eotsd-data:/home/finality-provider/:rw
+      - eotsd-data:/data:rw
 
 volumes:
   eotsd-data:

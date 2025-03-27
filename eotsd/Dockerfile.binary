@@ -1,7 +1,7 @@
 # Declare build arguments at the top
 ARG FINALITY_PROVIDER_VERSION
-ARG USER=finality-provider
-ARG UID=10002
+ARG USER=eotsd
+ARG UID=10003
 
 # Base image for finality
 FROM babylonlabs/finality-provider:${FINALITY_PROVIDER_VERSION} AS finality
@@ -14,8 +14,6 @@ ARG USER
 ARG UID
 ARG FINALITY_PROVIDER_VERSION
 
-# Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
 ENV FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
 
 # Add user and group
@@ -31,20 +29,17 @@ RUN adduser \
 # Install dependencies and clean up
 RUN apt-get update && apt-get install -y ca-certificates bash tzdata
 
-
 # Set the working directory for the container
-WORKDIR /home/${USER}
+WORKDIR /data
+RUN chown -R ${USER}:${USER} /data && chmod -R 700 /data
 
 # Copy configuration and binaries
 COPY --from=finality /bin/eotsd /usr/local/bin/eotsd
 COPY ./docker-entrypoint.sh /usr/local/bin/
 
-# Set correct permissions
-RUN chown -R ${USER}:${USER} /home/${USER} && \
-    chmod -R 700 /home/${USER} && \
-    chmod +x /usr/local/bin/docker-entrypoint.sh
+# Belt and suspenders
+RUN chmod -R 755 /usr/local/bin/*
 
 USER ${USER}
 
-# Entrypoint
 ENTRYPOINT ["eotsd"]

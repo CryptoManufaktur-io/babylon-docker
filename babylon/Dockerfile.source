@@ -4,15 +4,13 @@ FROM ghcr.io/tomwright/dasel:2-alpine AS dasel
 # Build babylond for CLI use.
 FROM golang:1.23-alpine AS builder
 
-ARG DAEMON_VERSION=v0.9.0
+ARG DAEMON_VERSION
 ARG BABYLON_BUILD_OPTIONS=""
 ARG COSMOS_BUILD_OPTIONS=""
 
 # Use muslc for static libs
 ARG BUILD_TAGS="muslc"
 ARG LEDGER_ENABLED="false"
-
-
 
 RUN apk add --update --no-cache ca-certificates make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq musl-dev && rm -rf /var/cache/apk/\*
 
@@ -42,14 +40,10 @@ FROM alpine:3.14
 
 ARG USER=cosmos
 ARG UID=10001
-ARG COSMOVISOR_VERSION=v1.5.0
-ARG DAEMON_VERSION=v1.0.0-rc.6-fix
-ARG DOWNLOAD_BASE_URL
+ARG COSMOVISOR_VERSION=v1.7.1
+ARG DAEMON_VERSION
 
 ENV VERSION_NUMBER=${DAEMON_VERSION#v}
-
-
-
 
 RUN apk update && apk add --no-cache ca-certificates tzdata bash curl wget lz4 jq tar
 
