@@ -161,9 +161,7 @@ services:
       - MONIKER=${MONIKER}
       - LOG_LEVEL=${LOG_LEVEL:-info}
     volumes:
-      - ./keys/operator:/cosmos/keyring-test:rw
-      - ./keys/consensus/priv_validator_key.json:/cosmos/config/priv_validator_key.json:rw
-      - ./keys/consensus/priv_validator_state.json:/cosmos/data/priv_validator_state.json:rw
+      - consensus-data:/cosmos
     entrypoint:
       - babylond
 
@@ -277,6 +275,51 @@ services:
         babylond create-bls-key $$bbn_address --home /cosmos
         chown -R babylon:babylon /data/config/*
         echo "BLS Key created!"
+
+  import-bls-key:
+    profiles: ["tools"]
+    build:
+      context: ./babylon
+      dockerfile: Dockerfile.source
+      args:
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - BABYLON_BUILD_OPTIONS=${BABYLON_BUILD_OPTIONS}
+        - USER=babylon
+    image: babylon:local
+    pull_policy: never
+    user: root
+    volumes:
+      - consensus-data:/cosmos
+      - ./keys/consensus:/data/config:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        echo "Importing BLS key ./keys/consensus into container"
+        cp /data/config/bls_key.json /cosmos/config/
+        chown -R babylon:babylon /cosmos/config/bls_key.json
+        echo "BLS key imported!"
+
+  export-bls-key:
+    profiles: ["tools"]
+    build:
+      context: ./babylon
+      dockerfile: Dockerfile.source
+      args:
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - BABYLON_BUILD_OPTIONS=${BABYLON_BUILD_OPTIONS}
+        - USER=babylon
+    image: babylon:local
+    pull_policy: never
+    user: root
+    volumes:
+      - consensus-data:/cosmos
+      - ./keys/consensus:/data/config:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        echo "Exporting BLS key from container to ./keys/consensus"
+        cp /cosmos/config/bls_key.json /data/config
+        echo "BLS key exported!"
 
   register-validator:
     profiles: ["tools"]

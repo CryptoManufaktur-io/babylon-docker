@@ -46,6 +46,40 @@ services:
       - metrics.instance=fpd
       - metrics.network=${NETWORK}
 
+  fpd-list-keys:
+    profiles: ["tools"]
+    build:
+      context: ./fpd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+    image: fpd:local
+    pull_policy: never
+    user: fpd
+    volumes:
+      - fpd-data:/data:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        fpd keys list --home /data/fpd
+
+  fpd-create-keys:
+    profiles: ["tools"]
+    build:
+      context: ./fpd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+    image: fpd:local
+    pull_policy: never
+    user: fpd
+    volumes:
+      - fpd-data:/data:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        fpd keys add finality-provider --home /data/fpd
+
   fpd-import-keys:
     profiles: ["tools"]
     build:
@@ -53,10 +87,9 @@ services:
       dockerfile: Dockerfile.binary
       args:
         - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
-        - USER=finality-provider
     image: fpd:local
     pull_policy: never
-    user: finality-provider
+    user: fpd
     volumes:
       - fpd-data:/data:rw
     entrypoint: ["/bin/bash","-c"]
@@ -71,12 +104,48 @@ services:
       dockerfile: Dockerfile.binary
       args:
         - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
-        - USER=finality-provider
     image: fpd:local
     pull_policy: never
-    user: finality-provider
+    user: fpd
     volumes:
       - fpd-data:/data:rw
+
+  fpd-import-db:
+    profiles: ["tools"]
+    build:
+      context: ./fpd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+    image: fpd:local
+    pull_policy: never
+    user: root
+    volumes:
+      - fpd-data:/data:rw
+      - ./backup:/backup:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        cp /backup/finality-provider.db /data/fpd/data/finality-provider.db
+        chown fpd:fpd /data/fpd/data/finality-provider.db
+
+  fpd-export-db:
+    profiles: ["tools"]
+    build:
+      context: ./fpd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+    image: fpd:local
+    pull_policy: never
+    user: root
+    volumes:
+      - fpd-data:/data:rw
+      - ./backup:/backup:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        cp /data/fpd/data/finality-provider.db /backup/finality-provider.db
 
 volumes:
   fpd-data:

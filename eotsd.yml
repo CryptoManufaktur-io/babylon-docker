@@ -41,6 +41,40 @@ services:
       - metrics.instance=eotsd
       - metrics.network=${NETWORK}
 
+  eotsd-list-keys:
+    profiles: ["tools"]
+    build:
+      context: ./eotsd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+    image: eotsd:local
+    pull_policy: never
+    user: eotsd
+    volumes:
+      - eotsd-data:/data:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        eotsd keys list --keyring-backend test --home /data/eotsd
+
+  eotsd-create-keys:
+    profiles: ["tools"]
+    build:
+      context: ./eotsd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+    image: eotsd:local
+    pull_policy: never
+    user: eotsd
+    volumes:
+      - eotsd-data:/data:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        eotsd keys add eotsd --keyring-backend test --home /data/eotsd
+
   eotsd-import-keys:
     profiles: ["tools"]
     build:
@@ -48,16 +82,15 @@ services:
       dockerfile: Dockerfile.binary
       args:
         - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
-        - USER=finality-provider
     image: eotsd:local
     pull_policy: never
-    user: finality-provider
+    user: eotsd
     volumes:
       - eotsd-data:/data:rw
     entrypoint: ["/bin/bash","-c"]
     command:
       - |
-        eotsd keys add $MONIKER --recover --keyring-backend test
+        eotsd keys add eotsd --recover --keyring-backend test --home /data/eotsd
 
   eotsd-cli:
     profiles: ["tools"]
@@ -66,12 +99,48 @@ services:
       dockerfile: Dockerfile.binary
       args:
         - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
-        - USER=finality-provider
     image: eotsd:local
     pull_policy: never
-    user: finality-provider
+    user: eotsd
     volumes:
       - eotsd-data:/data:rw
+
+  eotsd-import-db:
+    profiles: ["tools"]
+    build:
+      context: ./eotsd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+    image: eotsd:local
+    pull_policy: never
+    user: root
+    volumes:
+      - eotsd-data:/data:rw
+      - ./backup:/backup:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        cp /backup/eots.db /data/eotsd/data/eots.db
+        chown eotsd:eotsd /data/eotsd/data/eots.db
+
+  eotsd-export-db:
+    profiles: ["tools"]
+    build:
+      context: ./eotsd
+      dockerfile: Dockerfile.binary
+      args:
+        - FINALITY_PROVIDER_VERSION=${FINALITY_PROVIDER_VERSION}
+    image: eotsd:local
+    pull_policy: never
+    user: root
+    volumes:
+      - eotsd-data:/data:rw
+      - ./backup:/backup:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        cp /data/eotsd/data/eots.db /backup/eots.db
 
 volumes:
   eotsd-data:
