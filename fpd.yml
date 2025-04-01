@@ -25,6 +25,7 @@ services:
       - RPC_HOST=${RPC_HOST}
       - CL_RPC_PORT=${CL_RPC_PORT}
       - NETWORK=${NETWORK}
+      - BABYLOND_HOST=${BABYLOND_HOST}
     ports:
       - ${FPD_PORT}:${FPD_PORT}
     volumes:
