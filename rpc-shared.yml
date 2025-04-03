@@ -2,6 +2,6 @@
 services:
   babylon:
     ports:
-      - CL_RPC_PORT=${CL_RPC_PORT:-26657}:CL_RPC_PORT=${CL_RPC_PORT:-26657}/tcp
+      - ${CL_RPC_PORT:-26657}:${CL_RPC_PORT:-26657}/tcp
       - ${RPC_PORT:-8545}:${RPC_PORT:-8545}/tcp
       - ${WS_PORT:-8546}:${WS_PORT:-8546}/tcp
