@@ -702,10 +702,8 @@ find the original contents in ${__env_file}.bak."
 
 
 __prep_conffiles() {
-# Create ext-network.yml if it doesn't exist
-  if [ ! -f "ext-network.yml" ]; then
-    ${__as_owner} cp ext-network.yml.sample ext-network.yml
-  fi
+  # Adjust - this is where sample files would be copied to config files that are meant to be bind-mounted
+  return
 }
 
 
