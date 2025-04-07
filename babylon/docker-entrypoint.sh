@@ -36,7 +36,7 @@ if [[ ! -f /cosmos/.initialized ]]; then
     if [[ "$SNAPSHOT" == *.tar.lz4 ]]; then
       curl -o - -L "$SNAPSHOT" | lz4 -c -d - | tar --exclude='data/priv_validator_state.json' -x -C /cosmos
     elif [[ "$SNAPSHOT" == *.tar.gz ]]; then
-      curl -o - -L "$SNAPSHOT" | tar --exclude='data/priv_validator_state.json' -xvf - -C /cosmos
+      curl -o - -L "$SNAPSHOT" | tar --exclude='data/priv_validator_state.json' -xzvf - -C /cosmos
     else
       echo "Unsupported snapshot format: $SNAPSHOT"
       exit 1
