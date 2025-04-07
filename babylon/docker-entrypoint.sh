@@ -29,7 +29,7 @@ if [[ ! -f /cosmos/.initialized ]]; then
 
   echo "Downloading seeds..."
   SEEDS=$(curl -sL https://raw.githubusercontent.com/galaxy-mario/babylon-networks/refs/heads/main/$NETWORK/network-artifacts/seeds.txt | tr '\n' ',')
-  dasel put -f /cosmos/config/config.toml -v $SEEDS p2p.seeds
+  dasel put -f /cosmos/config/config.toml -v "$SEEDS" p2p.seeds
 
   if [ -n "$SNAPSHOT" ]; then
     echo "Downloading snapshot..."
@@ -119,7 +119,7 @@ dasel put -f /cosmos/config/client.toml -v "tcp://localhost:${CL_RPC_PORT}" node
 
 echo "Downloading peers..."
 PEERS=$(curl -sL https://raw.githubusercontent.com/galaxy-mario/babylon-networks/refs/heads/main/$NETWORK/network-artifacts/peers.txt | tr '\n' ',')
-dasel put -f /cosmos/config/config.toml -v $PEERS p2p.persistent_peers
+dasel put -f /cosmos/config/config.toml -v "$PEERS" p2p.persistent_peers
 
 # Start the process in a new session, so it gets its own process group.
 # Word splitting is desired for the command line parameters
