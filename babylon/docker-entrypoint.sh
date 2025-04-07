@@ -22,7 +22,7 @@ if [[ ! -f /cosmos/.initialized ]]; then
   ln -s -f $__genesis_path $__current_path
 
   echo "Running init..."
-  $__genesis_path/bin/$DAEMON_NAME init $MONIKER --chain-id $NETWORK --home /cosmos --overwrite --insecure-bls-password $BABYLON_BLS_PASSWORD
+  $__genesis_path/bin/$DAEMON_NAME init $MONIKER --chain-id $NETWORK --home /cosmos --overwrite
 
   echo "Downloading genesis..."
   wget https://raw.githubusercontent.com/galaxy-mario/babylon-networks/refs/heads/main/$NETWORK/network-artifacts/genesis.json -O /cosmos/config/genesis.json
