@@ -32,8 +32,15 @@ if [[ ! -f /cosmos/.initialized ]]; then
   dasel put -f /cosmos/config/config.toml -v "$SEEDS" p2p.seeds
 
   if [ -n "$SNAPSHOT" ]; then
-    echo "Downloading snapshot..."
-    curl -o - -L $SNAPSHOT | lz4 -c -d - | tar --exclude='data/priv_validator_state.json' -x -C /cosmos
+  echo "Downloading snapshot..."
+    if [[ "$SNAPSHOT" == *.tar.lz4 ]]; then
+      curl -o - -L "$SNAPSHOT" | lz4 -c -d - | tar --exclude='data/priv_validator_state.json' -x -C /cosmos
+    elif [[ "$SNAPSHOT" == *.tar.gz ]]; then
+      curl -o - -L "$SNAPSHOT" | tar --exclude='data/priv_validator_state.json' -xvf - -C /cosmos
+    else
+      echo "Unsupported snapshot format: $SNAPSHOT"
+      exit 1
+    fi
     rm -f /cosmos/data/upgrade-info.json
   else
     echo "No snapshot URL defined."
