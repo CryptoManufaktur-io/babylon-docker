@@ -29,6 +29,8 @@ RUN adduser \
 # Install dependencies and clean up
 RUN apt-get update && apt-get install -y ca-certificates bash tzdata
 
+VOLUME /data
+
 # Set the working directory for the container
 WORKDIR /data
 RUN chown -R ${USER}:${USER} /data && chmod -R 700 /data
