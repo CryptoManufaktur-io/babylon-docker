@@ -22,18 +22,25 @@ if [[ ! -f /cosmos/.initialized ]]; then
   ln -s -f $__genesis_path $__current_path
 
   echo "Running init..."
-  $__genesis_path/bin/$DAEMON_NAME init $MONIKER --chain-id $NETWORK --home /cosmos --overwrite --insecure-bls-password $BABYLON_BLS_PASSWORD
+  $__genesis_path/bin/$DAEMON_NAME init $MONIKER --chain-id $NETWORK --home /cosmos --overwrite
 
   echo "Downloading genesis..."
-  wget https://raw.githubusercontent.com/babylonlabs-io/networks/refs/heads/main/$NETWORK/network-artifacts/genesis.json -O /cosmos/config/genesis.json
+  wget https://raw.githubusercontent.com/galaxy-mario/babylon-networks/refs/heads/main/$NETWORK/network-artifacts/genesis.json -O /cosmos/config/genesis.json
 
   echo "Downloading seeds..."
-  SEEDS=$(curl -sL https://raw.githubusercontent.com/babylonlabs-io/networks/refs/heads/main/$NETWORK/seeds.txt | tr '\n' ',')
-  dasel put -f /cosmos/config/config.toml -v $SEEDS p2p.seeds
+  SEEDS=$(curl -sL https://raw.githubusercontent.com/galaxy-mario/babylon-networks/refs/heads/main/$NETWORK/network-artifacts/seeds.txt | tr '\n' ',')
+  dasel put -f /cosmos/config/config.toml -v "$SEEDS" p2p.seeds
 
   if [ -n "$SNAPSHOT" ]; then
-    echo "Downloading snapshot..."
-    curl -o - -L $SNAPSHOT | lz4 -c -d - | tar --exclude='data/priv_validator_state.json' -x -C /cosmos
+  echo "Downloading snapshot..."
+    if [[ "$SNAPSHOT" == *.tar.lz4 ]]; then
+      curl -o - -L "$SNAPSHOT" | lz4 -c -d - | tar --exclude='data/priv_validator_state.json' -x -C /cosmos
+    elif [[ "$SNAPSHOT" == *.tar.gz ]]; then
+      curl -o - -L "$SNAPSHOT" | tar --exclude='data/priv_validator_state.json' -xzvf - -C /cosmos
+    else
+      echo "Unsupported snapshot format: $SNAPSHOT"
+      exit 1
+    fi
     rm -f /cosmos/data/upgrade-info.json
   else
     echo "No snapshot URL defined."
@@ -97,6 +104,7 @@ dasel put -f /cosmos/config/config.toml -v ${MONIKER} moniker
 dasel put -f /cosmos/config/config.toml -v true prometheus
 dasel put -f /cosmos/config/config.toml -v ${LOG_LEVEL} log_level
 dasel put -f /cosmos/config/config.toml -v true instrumentation.prometheus
+
 dasel put -f /cosmos/config/app.toml -v "0.0.0.0:${RPC_PORT}" json-rpc.address
 dasel put -f /cosmos/config/app.toml -v "0.0.0.0:${WS_PORT}" json-rpc.ws-address
 dasel put -f /cosmos/config/app.toml -v "0.0.0.0:${CL_GRPC_PORT}" grpc.address
@@ -104,12 +112,21 @@ dasel put -f /cosmos/config/app.toml -v true grpc.enable
 dasel put -f /cosmos/config/app.toml -v "${MIN_GAS_PRICE}" "minimum-gas-prices"
 dasel put -f /cosmos/config/app.toml -v 0 "iavl-cache-size"
 dasel put -f /cosmos/config/app.toml -v "true" "iavl-disable-fastnode"
-dasel put -f /cosmos/config/app.toml -v "signet" "btc-config.network"
+dasel put -f /cosmos/config/app.toml -v 0 mempool.max-txs
+
+if [ "$NETWORK" = "bbn-1" ]; then
+  dasel put -f /cosmos/config/config.toml -v "9200ms" consensus.timeout_commit
+  dasel put -f /cosmos/config/app.toml -v "mainnet" "btc-config.network"
+else
+  dasel put -f /cosmos/config/config.toml -v "10s" consensus.timeout_commit
+  dasel put -f /cosmos/config/app.toml -v "signet" "btc-config.network"
+fi
+
 dasel put -f /cosmos/config/client.toml -v "tcp://localhost:${CL_RPC_PORT}" node
 
 echo "Downloading peers..."
-PEERS=$(curl -sL https://raw.githubusercontent.com/babylonlabs-io/networks/refs/heads/main/$NETWORK/peers.txt | tr '\n' ',')
-dasel put -f /cosmos/config/config.toml -v $PEERS p2p.persistent_peers
+PEERS=$(curl -sL https://raw.githubusercontent.com/babylonlabs-io/networks/refs/heads/main/$NETWORK/network-artifacts/peers.txt | tr '\n' ',')
+dasel put -f /cosmos/config/config.toml -v "$PEERS" p2p.persistent_peers
 
 # Start the process in a new session, so it gets its own process group.
 # Word splitting is desired for the command line parameters

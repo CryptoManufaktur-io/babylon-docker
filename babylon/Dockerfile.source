@@ -60,6 +60,8 @@ RUN wget https://github.com/cosmos/cosmos-sdk/releases/download/cosmovisor%2F${C
 RUN tar xf cosmovisor-${COSMOVISOR_VERSION}-linux-amd64.tar.gz
 RUN mv cosmovisor /usr/local/bin
 
+VOLUME /cosmos
+
 RUN mkdir -p /cosmos/cosmovisor/genesis/bin
 RUN mkdir /cosmos/cosmovisor/upgrades
 RUN mkdir /cosmos/config
