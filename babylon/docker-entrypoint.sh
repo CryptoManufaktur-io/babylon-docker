@@ -125,7 +125,7 @@ fi
 dasel put -f /cosmos/config/client.toml -v "tcp://localhost:${CL_RPC_PORT}" node
 
 echo "Downloading peers..."
-PEERS=$(curl -sL https://raw.githubusercontent.com/galaxy-mario/babylon-networks/refs/heads/main/$NETWORK/network-artifacts/peers.txt | tr '\n' ',')
+PEERS=$(curl -sL https://raw.githubusercontent.com/babylonlabs-io/networks/refs/heads/main/$NETWORK/network-artifacts/peers.txt | tr '\n' ',')
 dasel put -f /cosmos/config/config.toml -v "$PEERS" p2p.persistent_peers
 
 # Start the process in a new session, so it gets its own process group.
