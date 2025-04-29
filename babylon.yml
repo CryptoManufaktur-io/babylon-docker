@@ -42,6 +42,7 @@ services:
       - CL_GRPC_PORT=${CL_GRPC_PORT:-9090}
       - CL_P2P_PORT=${CL_P2P_PORT:-26656}
       - CL_RPC_PORT=${CL_RPC_PORT:-26657}
+      - CL_REST_PORT=${CL_REST_PORT:-1317}
       - RPC_PORT=${RPC_PORT:-8545}
       - WS_PORT=${WS_PORT:-8546}
       - SNAPSHOT=${SNAPSHOT}
@@ -98,6 +99,24 @@ services:
         - traefik.http.routers.${WS_HOST:-babylonws}lb.rule=Host(`${WS_LB:-babylonws-lb}.${DOMAIN}`)
         - traefik.http.routers.${WS_HOST:-babylonws}lb.tls.certresolver=letsencrypt
         - traefik.http.services.${WS_HOST:-babylonws}.loadbalancer.server.port=${WS_PORT:-8546}
+        - traefik.http.routers.${REST_HOST}.service=${REST_HOST}
+        - traefik.http.routers.${REST_HOST}.entrypoints=websecure
+        - traefik.http.routers.${REST_HOST}.rule=Host(`${REST_HOST}.${DOMAIN}`)
+        - traefik.http.routers.${REST_HOST}.tls.certresolver=letsencrypt
+        - traefik.http.routers.${REST_HOST}lb.service=${REST_HOST}
+        - traefik.http.routers.${REST_HOST}lb.entrypoints=websecure
+        - traefik.http.routers.${REST_HOST}lb.rule=Host(`${REST_LB}.${DOMAIN}`)
+        - traefik.http.routers.${REST_HOST}lb.tls.certresolver=letsencrypt
+        - traefik.http.services.${REST_HOST}.loadbalancer.server.port=${CL_REST_PORT}
+        - traefik.http.routers.${GRPC_HOST}.service=${GRPC_HOST}
+        - traefik.http.routers.${GRPC_HOST}.entrypoints=websecure
+        - traefik.http.routers.${GRPC_HOST}.rule=Host(`${GRPC_HOST}.${DOMAIN}`)
+        - traefik.http.routers.${GRPC_HOST}.tls.certresolver=letsencrypt
+        - traefik.http.routers.${GRPC_HOST}lb.service=${GRPC_HOST}
+        - traefik.http.routers.${GRPC_HOST}lb.entrypoints=websecure
+        - traefik.http.routers.${GRPC_HOST}lb.rule=Host(`${GRPC_LB}.${DOMAIN}`)
+        - traefik.http.routers.${GRPC_HOST}lb.tls.certresolver=letsencrypt
+        - traefik.http.services.${GRPC_HOST}.loadbalancer.server.port=${CL_GRPC_PORT}
         - metrics.scrape=true
         - metrics.path=/metrics
         - metrics.port=26660
@@ -253,7 +272,7 @@ services:
         babylond keys add $MONIKER --keyring-backend test --home /cosmos 2>&1 | tee /tmp/temp_backup
         [ $${PIPESTATUS[0]} -eq 0 ] && sed -n '/- address/,$$p' /tmp/temp_backup > "/cosmos/keyring-test/${MONIKER}.backup" || rm /tmp/temp_backup
         chown -R babylon:babylon /cosmos/keyring-test/*
-  
+
   create-bls-key:
     profiles: ["tools"]
     build:
