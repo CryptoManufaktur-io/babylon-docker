@@ -26,6 +26,22 @@ else
   sed -i '/BufferSize = 1000/a PollSize = 100' /data/fpd/fpd.conf
 fi
 
+if ! sed -n '/^\[Application Options\]/,/^\[/{ /^NumPubRandMax =/p }' /data/fpd/fpd.conf | grep -q .; then
+  sed -i '/^\[Application Options\]/a NumPubRandMax = 500000' /data/fpd/fpd.conf
+fi
+
+if ! sed -n '/^\[Application Options\]/,/^\[/{ /^RandomnessCommitInterval =/p }' /data/fpd/fpd.conf | grep -q .; then
+  sed -i '/^\[Application Options\]/a RandomnessCommitInterval = 30s' /data/fpd/fpd.conf
+fi
+
+if ! sed -n '/^\[Application Options\]/,/^\[/{ /^ContextSigningHeight =/p }' /data/fpd/fpd.conf | grep -q .; then
+  sed -i '/^\[Application Options\]/a ContextSigningHeight = 1692199' /data/fpd/fpd.conf
+fi
+
+sed -i '/^\[Application Options\]/,/^\[/{ /^[[:space:]]*ChainType = babylon/d }' /data/fpd/fpd.conf
+
+sed -i '/^\[Application Options\]/,/^\[/{ /^[[:space:]]*BitcoinNetwork = signet/d }' /data/fpd/fpd.conf
+
 # Word splitting is desired for the command line parameters
 # shellcheck disable=SC2086
 exec "$@" ${EXTRA_FLAGS}
