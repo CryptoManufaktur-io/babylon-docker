@@ -16,10 +16,9 @@ sed -i "s|^EOTSManagerAddress = .*|EOTSManagerAddress = ${EOTSD_HOST}|" /data/fp
 sed -i "s|^RPCAddr = .*|RPCAddr = ${BABYLOND_HOST}|" /data/fpd/fpd.conf
 sed -i "s|^ChainID = .*|ChainID = ${NETWORK}|" /data/fpd/fpd.conf
 sed -i '/^\[metrics\]/,/^\[/{ /^[^[]/ s/127\.0\.0\.1/0.0.0.0/g }' /data/fpd/fpd.conf
-# sed -i 's/^\(\s*BatchSubmissionSize\s*=\s*\).*/\1 100/' /data/fpd/fpd.conf
-sed -i 's/^\(\s*BatchSubmissionSize\s*=\s*\).*/\1 250/' /data/fpd/fpd.conf
-sed -i 's/^\(\s*BufferSize\s*=\s*\).*/\1 10000/' /data/fpd/fpd.conf
-sed -i 's/^\(\s*PollInterval\s*=\s*\).*/\1 200ms/' /data/fpd/fpd.conf
+sed -i 's/^BatchSubmissionSize[[:space:]]*=[[:space:]]*.*/BatchSubmissionSize = 250/' /data/fpd/fpd.conf
+sed -i 's/^BufferSize[[:space:]]*=[[:space:]]*.*/BufferSize = 10000/' /data/fpd/fpd.conf
+sed -i 's/^PollInterval[[:space:]]*=[[:space:]]*.*/PollInterval = 200ms/' /data/fpd/fpd.conf
 
 if sed -n '/\[chainpollerconfig\]/,/^\[/p' /data/fpd/fpd.conf | grep -q 'PollSize'; then
   # Update the existing PollSize value
@@ -30,7 +29,10 @@ else
 fi
 
 # Add GRPCMaxContentLength and UnsafeResetLastVotedHeight if not present
-if ! grep -q '^GRPCMaxContentLength' /data/fpd/fpd.conf; then
+if grep -q '^GRPCMaxContentLength' /data/fpd/fpd.conf; then
+  sed -i 's/^GRPCMaxContentLength[[:space:]]*=[[:space:]]*.*/GRPCMaxContentLength = 16777216/' /data/fpd/fpd.conf
+  sed -i 's/^UnsafeResetLastVotedHeight[[:space:]]*=[[:space:]]*.*/UnsafeResetLastVotedHeight = true/' /data/fpd/fpd.conf
+else
   cat <<EOF >> /data/fpd/fpd.conf
 [Application Options]
 ; The maximum size of the gRPC message in bytes.
@@ -39,10 +41,6 @@ GRPCMaxContentLength = 16777216
 ; WARNING: If set to 'true', resets the finality provider's last voted height to the calculated start height from poller. WARNING
 UnsafeResetLastVotedHeight = true
 EOF
-else
-  # Update existing GRPCMaxContentLength value to 16777216 and UnsafeResetLastVotedHeight to true
-  sed -i 's/^\(\s*GRPCMaxContentLength\s*=\s*\).*/\1 16777216/' /data/fpd/fpd.conf
-  sed -i 's/^\(\s*UnsafeResetLastVotedHeight\s*=\s*\).*/\1 true/' /data/fpd/fpd.conf
 fi
 
 

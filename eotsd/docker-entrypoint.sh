@@ -20,7 +20,7 @@ GRPCMaxContentLength = 16777216
 EOF
 else
   # Update existing GRPCMaxContentLength value to 16777216
-  sed -i 's/^\(\s*GRPCMaxContentLength\s*=\s*\).*/\1 16777216/' /data/eotsd/eotsd.conf
+  sed -i 's/^GRPCMaxContentLength[[:space:]]*=[[:space:]]*.*/GRPCMaxContentLength = 16777216/' /data/eotsd/eotsd.conf
 fi
 
 # Word splitting is desired for the command line parameters
