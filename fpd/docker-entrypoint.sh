@@ -19,6 +19,8 @@ sed -i '/^\[metrics\]/,/^\[/{ /^[^[]/ s/127\.0\.0\.1/0.0.0.0/g }' /data/fpd/fpd.
 sed -i 's/^BatchSubmissionSize[[:space:]]*=[[:space:]]*.*/BatchSubmissionSize = 250/' /data/fpd/fpd.conf
 sed -i 's/^BufferSize[[:space:]]*=[[:space:]]*.*/BufferSize = 10000/' /data/fpd/fpd.conf
 sed -i 's/^PollInterval[[:space:]]*=[[:space:]]*.*/PollInterval = 200ms/' /data/fpd/fpd.conf
+sed -i 's/^TimestampingDelayBlocks[[:space:]]*=[[:space:]]*.*/TimestampingDelayBlocks = 60000/' /data/fpd/fpd.conf
+sed -i 's/^NumPubRand[[:space:]]*=[[:space:]]*.*/NumPubRand = 100000/' /data/fpd/fpd.conf
 
 if sed -n '/\[chainpollerconfig\]/,/^\[/p' /data/fpd/fpd.conf | grep -q 'PollSize'; then
   # Update the existing PollSize value
