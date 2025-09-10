@@ -28,32 +28,31 @@ fi
 
 # Testnet only changes from hotfix
 if [ "$NETWORK" = "bbn-test-5" ]; then
-  sed -i 's/^BatchSubmissionSize[[:space:]]*=[[:space:]]*.*/BatchSubmissionSize = 250/' /data/fpd/fpd.conf
-  sed -i 's/^BufferSize[[:space:]]*=[[:space:]]*.*/BufferSize = 10000/' /data/fpd/fpd.conf
-  sed -i 's/^PollInterval[[:space:]]*=[[:space:]]*.*/PollInterval = 200ms/' /data/fpd/fpd.conf
-  sed -i 's/^TimestampingDelayBlocks[[:space:]]*=[[:space:]]*.*/TimestampingDelayBlocks = 60000/' /data/fpd/fpd.conf
-  sed -i 's/^NumPubRand[[:space:]]*=[[:space:]]*.*/NumPubRand = 100000/' /data/fpd/fpd.conf
+  sed -i 's/^BatchSubmissionSize[[:space:]]*=[[:space:]]*.*/BatchSubmissionSize = 1000/' /data/fpd/fpd.conf
+  sed -i 's/^BufferSize[[:space:]]*=[[:space:]]*.*/BufferSize = 1000/' /data/fpd/fpd.conf
+  sed -i 's/^PollInterval[[:space:]]*=[[:space:]]*.*/PollInterval = 1s/' /data/fpd/fpd.conf
+  sed -i 's/^TimestampingDelayBlocks[[:space:]]*=[[:space:]]*.*/TimestampingDelayBlocks = 80000/' /data/fpd/fpd.conf
+  sed -i 's/^NumPubRand[[:space:]]*=[[:space:]]*.*/NumPubRand = 160000/' /data/fpd/fpd.conf
+  # this removes an old testnet value that we no longer need
+  sed -i '/^UnsafeResetLastVotedHeight[[:space:]]*=[[:space:]]*true$/d' /data/fpd/fpd.conf
 
   if sed -n '/\[chainpollerconfig\]/,/^\[/p' /data/fpd/fpd.conf | grep -q 'PollSize'; then
     # Update the existing PollSize value
-    sed -i '/\[chainpollerconfig\]/,/\[/ s/^\(\s*PollSize\s*=\s*\).*/\1 20/' /data/fpd/fpd.conf
+    sed -i '/\[chainpollerconfig\]/,/\[/ s/^\(\s*PollSize\s*=\s*\).*/\1 1000/' /data/fpd/fpd.conf
   else
     # Append PollSize after BufferSize if PollSize is not present
-    sed -i '/BufferSize = 10000/a PollSize = 20' /data/fpd/fpd.conf
+    sed -i '/BufferSize = 1000/a PollSize = 1000' /data/fpd/fpd.conf
   fi
 
   # Add GRPCMaxContentLength and UnsafeResetLastVotedHeight if not present
   if grep -q '^GRPCMaxContentLength' /data/fpd/fpd.conf; then
     sed -i 's/^GRPCMaxContentLength[[:space:]]*=[[:space:]]*.*/GRPCMaxContentLength = 16777216/' /data/fpd/fpd.conf
-    sed -i 's/^UnsafeResetLastVotedHeight[[:space:]]*=[[:space:]]*.*/UnsafeResetLastVotedHeight = true/' /data/fpd/fpd.conf
+
   else
     cat <<EOF >> /data/fpd/fpd.conf
 [Application Options]
 ; The maximum size of the gRPC message in bytes.
 GRPCMaxContentLength = 16777216
-
-; WARNING: If set to 'true', resets the finality provider's last voted height to the calculated start height from poller. WARNING
-UnsafeResetLastVotedHeight = true
 EOF
   fi
 fi
