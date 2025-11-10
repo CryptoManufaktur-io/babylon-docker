@@ -68,26 +68,31 @@ if [[ ! -f /cosmos/.initialized ]]; then
   # Point to current.
   ln -s -f $__genesis_path $__current_path
 
-  echo "Running init..."
-  $__genesis_path/bin/$DAEMON_NAME init $MONIKER --chain-id $NETWORK --home /cosmos --overwrite
-
   echo "Downloading genesis..."
+  mkdir -p /tmp
   if [ "$NETWORK" = "bbn-1" ]; then
-    retry_with_backoff wget -O /cosmos/config/genesis.json https://raw.githubusercontent.com/babylonlabs-io/networks/main/bbn-1/network-artifacts/genesis.json --inet4-only --timeout=30 --tries=3 --continue
+    retry_with_backoff wget -O /tmp/genesis.json https://raw.githubusercontent.com/babylonlabs-io/networks/main/bbn-1/network-artifacts/genesis.json --inet4-only --timeout=30 --tries=3
   elif [ "$NETWORK" = "bbn-test-6" ]; then
-    retry_with_backoff wget -O /cosmos/config/genesis.json https://raw.githubusercontent.com/babylonlabs-io/networks/main/bbn-test-6/network-artifacts/genesis.json --inet4-only --timeout=30 --tries=3 --continue
+    retry_with_backoff wget -O /tmp/genesis.json https://raw.githubusercontent.com/babylonlabs-io/networks/main/bbn-test-6/network-artifacts/genesis.json --inet4-only --timeout=30 --tries=3
   else
     # Fallback for other networks - try to construct URL from network name
     echo "Attempting to download genesis for network: $NETWORK"
-    retry_with_backoff wget -O /cosmos/config/genesis.json https://raw.githubusercontent.com/babylonlabs-io/networks/main/$NETWORK/network-artifacts/genesis.json --inet4-only --timeout=30 --tries=3 --continue
+    retry_with_backoff wget -O /tmp/genesis.json https://raw.githubusercontent.com/babylonlabs-io/networks/main/$NETWORK/network-artifacts/genesis.json --inet4-only --timeout=30 --tries=3
   fi
 
   # Verify genesis file is valid JSON
-  if ! jq empty /cosmos/config/genesis.json 2>/dev/null; then
+  if ! jq empty /tmp/genesis.json 2>/dev/null; then
     echo "Error: Downloaded genesis file is not valid JSON"
     exit 1
   fi
   echo "Genesis file downloaded and verified successfully"
+
+  echo "Running init..."
+  $__genesis_path/bin/$DAEMON_NAME init $MONIKER --chain-id $NETWORK --home /cosmos
+
+  # Copy the downloaded genesis file over the generated one
+  cp /tmp/genesis.json /cosmos/config/genesis.json
+  echo "Genesis file installed successfully"
 
   if [ -n "$SNAPSHOT" ]; then
     echo "Downloading snapshot from: $SNAPSHOT"
