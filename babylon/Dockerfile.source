@@ -45,7 +45,7 @@ ARG DAEMON_VERSION
 
 ENV VERSION_NUMBER=${DAEMON_VERSION#v}
 
-RUN apk update && apk add --no-cache ca-certificates tzdata bash curl wget lz4 jq tar
+RUN apk update && apk add --no-cache ca-certificates tzdata bash curl wget lz4 jq tar aria2
 
 # See https://stackoverflow.com/a/55757473/12429735RUN
 RUN adduser \

@@ -98,20 +98,41 @@ if [[ ! -f /cosmos/.initialized ]]; then
     echo "Downloading snapshot from: $SNAPSHOT"
     echo "This may take a while depending on your connection speed..."
 
-    # Use parallel decompression for faster extraction
-    if [[ "$SNAPSHOT" == *.tar.lz4 ]]; then
-      echo "Detected lz4 compressed snapshot"
-      retry_with_backoff curl -L --progress-bar --max-time 7200 "$SNAPSHOT" | lz4 -d -c | tar --exclude='data/priv_validator_state.json' -x -C /cosmos
-    elif [[ "$SNAPSHOT" == *.tar.gz ]]; then
-      echo "Detected gzip compressed snapshot"
-      retry_with_backoff curl -L --progress-bar --max-time 7200 "$SNAPSHOT" | tar --exclude='data/priv_validator_state.json' -xzf - -C /cosmos
-    elif [[ "$SNAPSHOT" == *.tar ]]; then
-      echo "Detected uncompressed tar snapshot"
-      retry_with_backoff curl -L --progress-bar --max-time 7200 "$SNAPSHOT" | tar --exclude='data/priv_validator_state.json' -xf - -C /cosmos
+    # Check if aria2c is available for faster downloads
+    if command -v aria2c &> /dev/null; then
+      echo "Using aria2c for accelerated download (multi-connection)"
+      # Use parallel decompression with aria2c for faster download
+      if [[ "$SNAPSHOT" == *.tar.lz4 ]]; then
+        echo "Detected lz4 compressed snapshot"
+        retry_with_backoff aria2c -x 16 -s 16 --max-connection-per-server=16 --min-split-size=1M -o /tmp/snapshot.tar.lz4 "$SNAPSHOT" && lz4 -d -c /tmp/snapshot.tar.lz4 | tar --exclude='data/priv_validator_state.json' -x -C /cosmos && rm -f /tmp/snapshot.tar.lz4
+      elif [[ "$SNAPSHOT" == *.tar.gz ]]; then
+        echo "Detected gzip compressed snapshot"
+        retry_with_backoff aria2c -x 16 -s 16 --max-connection-per-server=16 --min-split-size=1M -o /tmp/snapshot.tar.gz "$SNAPSHOT" && tar --exclude='data/priv_validator_state.json' -xzf /tmp/snapshot.tar.gz -C /cosmos && rm -f /tmp/snapshot.tar.gz
+      elif [[ "$SNAPSHOT" == *.tar ]]; then
+        echo "Detected uncompressed tar snapshot"
+        retry_with_backoff aria2c -x 16 -s 16 --max-connection-per-server=16 --min-split-size=1M -o /tmp/snapshot.tar "$SNAPSHOT" && tar --exclude='data/priv_validator_state.json' -xf /tmp/snapshot.tar -C /cosmos && rm -f /tmp/snapshot.tar
+      else
+        echo "Error: Unsupported snapshot format: $SNAPSHOT"
+        echo "Supported formats: .tar.lz4, .tar.gz, .tar"
+        exit 1
+      fi
     else
-      echo "Error: Unsupported snapshot format: $SNAPSHOT"
-      echo "Supported formats: .tar.lz4, .tar.gz, .tar"
-      exit 1
+      echo "Using curl for download (aria2c not available for multi-connection download)"
+      # Use parallel decompression for faster extraction
+      if [[ "$SNAPSHOT" == *.tar.lz4 ]]; then
+        echo "Detected lz4 compressed snapshot"
+        retry_with_backoff curl -L --progress-bar --max-time 7200 "$SNAPSHOT" | lz4 -d -c | tar --exclude='data/priv_validator_state.json' -x -C /cosmos
+      elif [[ "$SNAPSHOT" == *.tar.gz ]]; then
+        echo "Detected gzip compressed snapshot"
+        retry_with_backoff curl -L --progress-bar --max-time 7200 "$SNAPSHOT" | tar --exclude='data/priv_validator_state.json' -xzf - -C /cosmos
+      elif [[ "$SNAPSHOT" == *.tar ]]; then
+        echo "Detected uncompressed tar snapshot"
+        retry_with_backoff curl -L --progress-bar --max-time 7200 "$SNAPSHOT" | tar --exclude='data/priv_validator_state.json' -xf - -C /cosmos
+      else
+        echo "Error: Unsupported snapshot format: $SNAPSHOT"
+        echo "Supported formats: .tar.lz4, .tar.gz, .tar"
+        exit 1
+      fi
     fi
 
     # Clean up any upgrade info from snapshot
