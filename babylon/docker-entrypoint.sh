@@ -25,11 +25,11 @@ if [[ ! -f /cosmos/.initialized ]]; then
   $__genesis_path/bin/$DAEMON_NAME init $MONIKER --chain-id $NETWORK --home /cosmos --overwrite
 
   echo "Downloading genesis..."
-  wget https://raw.githubusercontent.com/galaxy-mario/babylon-networks/refs/heads/main/$NETWORK/network-artifacts/genesis.json -O /cosmos/config/genesis.json
-
-  echo "Downloading seeds..."
-  SEEDS=$(curl -sL https://raw.githubusercontent.com/galaxy-mario/babylon-networks/refs/heads/main/$NETWORK/network-artifacts/seeds.txt | tr '\n' ',')
-  dasel put -f /cosmos/config/config.toml -v "$SEEDS" p2p.seeds
+  if [ "$NETWORK" = "bbn-1" ]; then
+    wget -O /cosmos/config/genesis.json https://snapshots.polkachu.com/genesis/babylon/genesis.json --inet4-only
+  else
+    wget -O /cosmos/config/genesis.json https://snapshots.polkachu.com/testnet-genesis/babylon/genesis.json --inet4-only
+  fi
 
   if [ -n "$SNAPSHOT" ]; then
   echo "Downloading snapshot..."
