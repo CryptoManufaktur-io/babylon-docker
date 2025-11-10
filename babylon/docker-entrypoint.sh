@@ -73,9 +73,13 @@ if [[ ! -f /cosmos/.initialized ]]; then
 
   echo "Downloading genesis..."
   if [ "$NETWORK" = "bbn-1" ]; then
-    retry_with_backoff wget -O /cosmos/config/genesis.json https://snapshots.polkachu.com/genesis/babylon/genesis.json --inet4-only --timeout=30 --tries=3 --continue
+    retry_with_backoff wget -O /cosmos/config/genesis.json https://raw.githubusercontent.com/babylonlabs-io/networks/refs/heads/main/bbn-1/network-artifacts/genesis.json --inet4-only --timeout=30 --tries=3 --continue
+  elif [ "$NETWORK" = "bbn-test-6" ]; then
+    retry_with_backoff wget -O /cosmos/config/genesis.json https://raw.githubusercontent.com/babylonlabs-io/networks/refs/heads/main/bbn-test-6/network-artifacts/genesis.json --inet4-only --timeout=30 --tries=3 --continue
   else
-    retry_with_backoff wget -O /cosmos/config/genesis.json https://snapshots.polkachu.com/testnet-genesis/babylon/genesis.json --inet4-only --timeout=30 --tries=3 --continue
+    # Fallback for other networks - try to construct URL from network name
+    echo "Attempting to download genesis for network: $NETWORK"
+    retry_with_backoff wget -O /cosmos/config/genesis.json https://raw.githubusercontent.com/babylonlabs-io/networks/refs/heads/main/$NETWORK/network-artifacts/genesis.json --inet4-only --timeout=30 --tries=3 --continue
   fi
 
   # Verify genesis file is valid JSON
@@ -231,7 +235,6 @@ else
 fi
 
 dasel put -f /cosmos/config/client.toml -v "tcp://localhost:${CL_RPC_PORT}" node
-
 
 # Start the process in a new session, so it gets its own process group.
 # Word splitting is desired for the command line parameters
