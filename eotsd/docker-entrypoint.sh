@@ -11,6 +11,18 @@ fi
 echo "Initialization complete. Ready to start eotsd."
 
 sed -i '/^\[metrics\]/,/^\[/{ /^[^[]/ s/127\.0\.0\.1/0.0.0.0/g }' /data/eotsd/eotsd.conf
+
+# Add NoFreelistSync if not present
+if grep -q '^NoFreelistSync' /data/eotsd/eotsd.conf; then
+  # Update existing NoFreelistSync value to false
+  sed -i 's/^NoFreelistSync[[:space:]]*=[[:space:]]*.*/NoFreelistSync = false/' /data/eotsd/eotsd.conf
+else
+  cat <<EOF >> /data/eotsd/eotsd.conf
+[dbconfig]
+NoFreelistSync = false
+EOF
+fi
+
 if [ "$NETWORK" = "bbn-test-5" ]; then
   # Add GRPCMaxContentLength if not present
   if grep -q '^GRPCMaxContentLength' /data/eotsd/eotsd.conf; then
