@@ -20,6 +20,7 @@ services:
       - LOG_LEVEL=debug
       - MONIKER=${MONIKER}
       - EXTRA_FLAGS=${EOTSD_EXTRA_FLAGS}
+      - NETWORK=${NETWORK}
     ports:
       - ${EOTSD_PORT}:${EOTSD_PORT}
     volumes:
