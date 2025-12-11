@@ -23,6 +23,18 @@ NoFreelistSync = false
 EOF
 fi
 
+# Add or update DisableUnsafeEndpoints under [Application Options]
+if grep -q '^\[Application Options\]' /data/eotsd/eotsd.conf; then
+  # Section exists, check if DisableUnsafeEndpoints is present
+  if grep -q '^DisableUnsafeEndpoints' /data/eotsd/eotsd.conf; then
+    # Update existing value
+    sed -i 's/^DisableUnsafeEndpoints[[:space:]]*=[[:space:]]*.*/DisableUnsafeEndpoints = true/' /data/eotsd/eotsd.conf
+  else
+    # Add it after the [Application Options] line
+    sed -i '/^\[Application Options\]/a DisableUnsafeEndpoints = true' /data/eotsd/eotsd.conf
+  fi
+fi
+
 if [ "$NETWORK" = "bbn-test-5" ]; then
   # Add GRPCMaxContentLength if not present
   if grep -q '^GRPCMaxContentLength' /data/eotsd/eotsd.conf; then

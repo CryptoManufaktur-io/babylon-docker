@@ -21,6 +21,7 @@ services:
       - MONIKER=${MONIKER}
       - EXTRA_FLAGS=${EOTSD_EXTRA_FLAGS}
       - NETWORK=${NETWORK}
+      - HMAC_KEY=${HMAC_KEY}
     ports:
       - ${EOTSD_PORT}:${EOTSD_PORT}
     volumes:
