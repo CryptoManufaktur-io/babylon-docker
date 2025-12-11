@@ -31,7 +31,7 @@ fi
 
 # Update HMACKey value
 if grep -q '^HMACKey' /data/fpd/fpd.conf; then
-  sed -i "s/^HMACKey[[:space:]]*=[[:space:]]*.*/HMACKey = ${HMAC_KEY}/" /data/fpd/fpd.conf
+  sed -i "s|^HMACKey[[:space:]]*=[[:space:]]*.*|HMACKey = ${HMAC_KEY}|" /data/fpd/fpd.conf
 fi
 
 if sed -n '/\[chainpollerconfig\]/,/^\[/p' /data/fpd/fpd.conf | grep -q 'PollSize'; then
