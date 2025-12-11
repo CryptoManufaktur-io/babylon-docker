@@ -35,6 +35,11 @@ if grep -q '^\[Application Options\]' /data/eotsd/eotsd.conf; then
   fi
 fi
 
+# Update HMACKey value
+if grep -q '^HMACKey' /data/eotsd/eotsd.conf; then
+  sed -i "s/^HMACKey[[:space:]]*=[[:space:]]*.*/HMACKey = ${HMAC_KEY}/" /data/eotsd/eotsd.conf
+fi
+
 if [ "$NETWORK" = "bbn-test-5" ]; then
   # Add GRPCMaxContentLength if not present
   if grep -q '^GRPCMaxContentLength' /data/eotsd/eotsd.conf; then

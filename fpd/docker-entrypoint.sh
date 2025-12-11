@@ -29,6 +29,11 @@ NoFreelistSync = false
 EOF
 fi
 
+# Update HMACKey value
+if grep -q '^HMACKey' /data/fpd/fpd.conf; then
+  sed -i "s/^HMACKey[[:space:]]*=[[:space:]]*.*/HMACKey = ${HMAC_KEY}/" /data/fpd/fpd.conf
+fi
+
 if sed -n '/\[chainpollerconfig\]/,/^\[/p' /data/fpd/fpd.conf | grep -q 'PollSize'; then
   # Update the existing PollSize value
   sed -i '/\[chainpollerconfig\]/,/\[/ s/^\(\s*PollSize\s*=\s*\).*/\1 100/' /data/fpd/fpd.conf
