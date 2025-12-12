@@ -27,6 +27,7 @@ services:
       - NETWORK=${NETWORK}
       - BABYLOND_HOST=${BABYLOND_HOST}
       - EOTSD_HOST=${EOTSD_HOST}
+      - HMAC_KEY=${HMAC_KEY}
     ports:
       - ${FPD_PORT}:${FPD_PORT}
     volumes:

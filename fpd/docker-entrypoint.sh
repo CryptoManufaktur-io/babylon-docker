@@ -18,6 +18,22 @@ sed -i "s|^ChainID = .*|ChainID = ${NETWORK}|" /data/fpd/fpd.conf
 sed -i '/^\[metrics\]/,/^\[/{ /^[^[]/ s/127\.0\.0\.1/0.0.0.0/g }' /data/fpd/fpd.conf
 sed -i 's/^\(\s*BatchSubmissionSize\s*=\s*\).*/\1 100/' /data/fpd/fpd.conf
 
+# Add NoFreelistSync if not present
+if grep -q '^NoFreelistSync' /data/fpd/fpd.conf; then
+  # Update existing NoFreelistSync value to false
+  sed -i 's/^NoFreelistSync[[:space:]]*=[[:space:]]*.*/NoFreelistSync = false/' /data/fpd/fpd.conf
+else
+  cat <<EOF >> /data/fpd/fpd.conf
+[dbconfig]
+NoFreelistSync = false
+EOF
+fi
+
+# Update HMACKey value
+if grep -q '^HMACKey' /data/fpd/fpd.conf; then
+  sed -i "s|^HMACKey[[:space:]]*=[[:space:]]*.*|HMACKey = ${HMAC_KEY}|" /data/fpd/fpd.conf
+fi
+
 if sed -n '/\[chainpollerconfig\]/,/^\[/p' /data/fpd/fpd.conf | grep -q 'PollSize'; then
   # Update the existing PollSize value
   sed -i '/\[chainpollerconfig\]/,/\[/ s/^\(\s*PollSize\s*=\s*\).*/\1 100/' /data/fpd/fpd.conf
