@@ -15,7 +15,7 @@ services:
     image: builder:babylond
     pull_policy: never
     environment:
-      - DAEMON_VERSION=temporary
+      - DAEMON_VERSION=${BABYLON_NODE_VERSION}
       - BABYLON_BUILD_OPTIONS=${BABYLON_BUILD_OPTIONS}
       - FORCE_REBUILD=${FORCE_REBUILD}
     volumes:
