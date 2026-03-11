@@ -8,6 +8,7 @@ x-logging: &logging
 
 services:
   builder:
+    profiles: ["skip"]
     restart: "no"
     build:
       context: ./builder
@@ -24,10 +25,9 @@ services:
   babylon:
     build:
       context: ./babylon
-      dockerfile: Dockerfile.localBinary
+      dockerfile: Dockerfile.temporary
       args:
         - DAEMON_VERSION=temporary
-        - BABYLON_BUILD_OPTIONS=${BABYLON_BUILD_OPTIONS}
         - USER=babylon
     image: babylon:local-temporary
     pull_policy: never
@@ -35,7 +35,7 @@ services:
     restart: unless-stopped
     stop_grace_period: 5m
     environment:
-      - DAEMON_VERSION=temporary
+      - DAEMON_VERSION=${BABYLON_NODE_VERSION}
       - EXTRA_FLAGS=${EXTRA_FLAGS:-}
       - NETWORK=${NETWORK}
       - MONIKER=${MONIKER}
@@ -61,9 +61,6 @@ services:
       - UNSAFE_SKIP_BACKUP=true
     ports:
       - ${CL_P2P_PORT:-26656}:${CL_P2P_PORT:-26656}/tcp
-    depends_on:
-      builder:
-        condition: service_completed_successfully
     <<: *logging
     volumes:
       - consensus-data:/cosmos
@@ -127,7 +124,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.localBinary
+      dockerfile: Dockerfile.temporary
       args:
         - DAEMON_VERSION=temporary
         - USER=babylon
@@ -135,7 +132,7 @@ services:
     pull_policy: never
     user: babylon
     environment:
-      - DAEMON_VERSION=temporary
+      - DAEMON_VERSION=${BABYLON_NODE_VERSION}
       - EXTRA_FLAGS=${EXTRA_FLAGS:-}
       - NETWORK=${NETWORK}
       - MONIKER=${MONIKER}
@@ -167,7 +164,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.localBinary
+      dockerfile: Dockerfile.temporary
       args:
         - DAEMON_VERSION=temporary
         - USER=babylon
@@ -175,7 +172,7 @@ services:
     pull_policy: never
     user: babylon
     environment:
-      - DAEMON_VERSION=temporary
+      - DAEMON_VERSION=${BABYLON_NODE_VERSION}
       - NETWORK=${NETWORK}
       - MONIKER=${MONIKER}
       - LOG_LEVEL=${LOG_LEVEL:-info}
@@ -188,7 +185,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.localBinary
+      dockerfile: Dockerfile.temporary
       args:
         - DAEMON_VERSION=temporary
         - USER=babylon
@@ -210,7 +207,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.localBinary
+      dockerfile: Dockerfile.temporary
       args:
         - DAEMON_VERSION=temporary
         - USER=babylon
@@ -234,7 +231,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.localBinary
+      dockerfile: Dockerfile.temporary
       args:
         - DAEMON_VERSION=temporary
         - USER=babylon
@@ -256,7 +253,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.localBinary
+      dockerfile: Dockerfile.temporary
       args:
         - DAEMON_VERSION=temporary
         - USER=babylon
@@ -277,7 +274,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.localBinary
+      dockerfile: Dockerfile.temporary
       args:
         - DAEMON_VERSION=temporary
         - USER=babylon
@@ -299,10 +296,9 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.localBinary
+      dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=temporary
-        - BABYLON_BUILD_OPTIONS=${BABYLON_BUILD_OPTIONS}
         - USER=babylon
     image: babylon:local-temporary
     pull_policy: never
@@ -322,10 +318,9 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.localBinary
+      dockerfile: Dockerfile.source
       args:
         - DAEMON_VERSION=temporary
-        - BABYLON_BUILD_OPTIONS=${BABYLON_BUILD_OPTIONS}
         - USER=babylon
     image: babylon:local-temporary
     pull_policy: never
@@ -344,7 +339,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.localBinary
+      dockerfile: Dockerfile.temporary
       args:
         - DAEMON_VERSION=temporary
         - USER=babylon
