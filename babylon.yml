@@ -8,7 +8,6 @@ x-logging: &logging
 
 services:
   builder:
-    profiles: ["skip"]
     restart: "no"
     build:
       context: ./builder
@@ -25,11 +24,12 @@ services:
   babylon:
     build:
       context: ./babylon
-      dockerfile: Dockerfile.temporary
+      dockerfile: Dockerfile.source
       args:
-        - DAEMON_VERSION=temporary
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - BABYLON_BUILD_OPTIONS=${BABYLON_BUILD_OPTIONS}
         - USER=babylon
-    image: babylon:local-temporary
+    image: babylon:local-${BABYLON_NODE_VERSION}
     pull_policy: never
     user: babylon
     restart: unless-stopped
@@ -61,6 +61,9 @@ services:
       - UNSAFE_SKIP_BACKUP=true
     ports:
       - ${CL_P2P_PORT:-26656}:${CL_P2P_PORT:-26656}/tcp
+    depends_on:
+      builder:
+        condition: service_completed_successfully
     <<: *logging
     volumes:
       - consensus-data:/cosmos
@@ -124,11 +127,11 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.temporary
+      dockerfile: Dockerfile.source
       args:
-        - DAEMON_VERSION=temporary
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
-    image: babylon:local-temporary
+    image: babylon:local-${BABYLON_NODE_VERSION}
     pull_policy: never
     user: babylon
     environment:
@@ -164,11 +167,11 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.temporary
+      dockerfile: Dockerfile.source
       args:
-        - DAEMON_VERSION=temporary
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
-    image: babylon:local-temporary
+    image: babylon:local-${BABYLON_NODE_VERSION}
     pull_policy: never
     user: babylon
     environment:
@@ -185,11 +188,11 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.temporary
+      dockerfile: Dockerfile.source
       args:
-        - DAEMON_VERSION=temporary
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
-    image: babylon:local-temporary
+    image: babylon:local-${BABYLON_NODE_VERSION}
     pull_policy: never
     user: root
     volumes:
@@ -207,11 +210,11 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.temporary
+      dockerfile: Dockerfile.source
       args:
-        - DAEMON_VERSION=temporary
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
-    image: babylon:local-temporary
+    image: babylon:local-${BABYLON_NODE_VERSION}
     pull_policy: never
     user: root
     volumes:
@@ -231,11 +234,11 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.temporary
+      dockerfile: Dockerfile.source
       args:
-        - DAEMON_VERSION=temporary
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
-    image: babylon:local-temporary
+    image: babylon:local-${BABYLON_NODE_VERSION}
     pull_policy: never
     user: root
     volumes:
@@ -253,11 +256,11 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.temporary
+      dockerfile: Dockerfile.source
       args:
-        - DAEMON_VERSION=temporary
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
-    image: babylon:local-temporary
+    image: babylon:local-${BABYLON_NODE_VERSION}
     pull_policy: never
     user: root
     volumes:
@@ -274,11 +277,11 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.temporary
+      dockerfile: Dockerfile.source
       args:
-        - DAEMON_VERSION=temporary
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
-    image: babylon:local-temporary
+    image: babylon:local-${BABYLON_NODE_VERSION}
     pull_policy: never
     user: root
     volumes:
@@ -298,9 +301,10 @@ services:
       context: ./babylon
       dockerfile: Dockerfile.source
       args:
-        - DAEMON_VERSION=temporary
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - BABYLON_BUILD_OPTIONS=${BABYLON_BUILD_OPTIONS}
         - USER=babylon
-    image: babylon:local-temporary
+    image: babylon:local-${BABYLON_NODE_VERSION}
     pull_policy: never
     user: root
     volumes:
@@ -320,9 +324,10 @@ services:
       context: ./babylon
       dockerfile: Dockerfile.source
       args:
-        - DAEMON_VERSION=temporary
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
+        - BABYLON_BUILD_OPTIONS=${BABYLON_BUILD_OPTIONS}
         - USER=babylon
-    image: babylon:local-temporary
+    image: babylon:local-${BABYLON_NODE_VERSION}
     pull_policy: never
     user: root
     volumes:
@@ -339,11 +344,11 @@ services:
     profiles: ["tools"]
     build:
       context: ./babylon
-      dockerfile: Dockerfile.temporary
+      dockerfile: Dockerfile.source
       args:
-        - DAEMON_VERSION=temporary
+        - DAEMON_VERSION=${BABYLON_NODE_VERSION}
         - USER=babylon
-    image: babylon:local-temporary
+    image: babylon:local-${BABYLON_NODE_VERSION}
     pull_policy: never
     user: babylon
     volumes:
